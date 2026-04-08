@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Approperty — 物業管理系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F5F2EE;--surface:#FFFFFF;--surface2:#F0EDE8;--border:#E2DDD7;
+  --text:#1A1714;--text-muted:#7A746C;
+  --accent:#C8522A;--accent-light:#F5E6DF;
+  --green:#2A7A52;--green-light:#DFF0E8;
+  --amber:#B07020;--amber-light:#FBF0DC;
+  --red:#C0302A;--red-light:#FAE0DE;
+  --blue:#1E5E9A;--blue-light:#DDE8F5;
+  --shadow:0 2px 12px rgba(26,23,20,0.08);--radius:12px;
+}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:220px;background:var(--text);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.sidebar-logo{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.sidebar-logo h1{font-size:20px;letter-spacing:1px;color:#fff;font-weight:700}
+.sidebar-logo span{color:var(--accent)}
+.sidebar-logo p{font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;letter-spacing:0.5px}
+.nav{padding:10px;flex:1;overflow-y:auto}
+.nav-section{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.28);padding:12px 10px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,0.58);font-size:13px;font-weight:500;transition:all 0.15s;margin-bottom:1px}
+.nav-item:hover{background:rgba(255,255,255,0.08);color:#fff}
+.nav-item.active{background:var(--accent);color:#fff}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;min-width:18px;text-align:center}
+.nav-item.active .nav-badge{background:rgba(255,255,255,0.28)}
+.nav-badge.notif{background:var(--red)}
+.nav-item.active .nav-badge.notif{background:rgba(255,255,255,0.28)}
+.nav-group-item{display:flex;align-items:center;gap:7px;padding:6px 10px 6px 20px;border-radius:7px;cursor:pointer;color:rgba(255,255,255,0.45);font-size:12px;font-weight:500;transition:all 0.15s;margin-bottom:1px}
+.nav-group-item:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.8)}
+.nav-group-item.active{background:rgba(255,255,255,0.12);color:#fff}
+.nav-group-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.nav-group-count{margin-left:auto;font-size:10px;color:rgba(255,255,255,0.28)}
+.sidebar-footer{padding:12px 18px;border-top:1px solid rgba(255,255,255,0.08);font-size:11px;color:rgba(255,255,255,0.3);line-height:1.6}
+
+/* TOPBAR */
+.topbar{position:fixed;top:0;left:220px;right:0;height:52px;background:var(--surface);border-bottom:1px solid var(--border);z-index:90;display:flex;align-items:center;padding:0 32px;gap:12px}
+.topbar-title{font-size:16px;font-weight:700;flex:1;color:var(--text)}
+.topbar-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:opacity 0.15s}
+.topbar-badge:hover{opacity:0.8}
+.topbar-badge.supabase-ok{background:var(--green-light);color:var(--green)}
+.topbar-badge.supabase-demo{background:var(--amber-light);color:var(--amber)}
+.topbar-badge svg{width:12px;height:12px}
+
+/* MAIN */
+.main{margin-left:220px;padding-top:52px;flex:1}
+.page-wrap{padding:26px 32px}
+.page{display:none}
+.page.active{display:block}
+
+/* PAGE HEADER */
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.page-title{font-size:24px;font-weight:700;line-height:1;color:var(--text)}
+.page-subtitle{color:var(--text-muted);font-size:13px;margin-top:4px}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'Noto Sans TC',sans-serif;transition:all 0.15s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#b04420}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--surface2)}
+.btn-sm{padding:5px 11px;font-size:12px}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stats-row-3{grid-template-columns:repeat(3,1fr)}
+.stat-card{background:var(--surface);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;flex-direction:column;gap:5px;transition:transform 0.15s}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-label{font-size:11px;letter-spacing:0.5px;color:var(--text-muted);font-weight:600}
+.stat-value{font-size:28px;font-weight:700;line-height:1.1;color:var(--text)}
+.stat-meta{font-size:11.5px;color:var(--text-muted)}
+.up{color:var(--green);font-weight:600}
+.down{color:var(--red);font-weight:600}
+
+/* ALERTS */
+.alerts-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.alert-chip{display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:500;cursor:pointer;transition:opacity 0.15s}
+.alert-chip:hover{opacity:0.8}
+.alert-chip.red{background:var(--red-light);color:var(--red)}
+.alert-chip.amber{background:var(--amber-light);color:var(--amber)}
+.alert-chip.blue{background:var(--blue-light);color:var(--blue)}
+.alert-chip svg{width:13px;height:13px;flex-shrink:0}
+
+/* LAYOUT */
+.content-grid{display:grid;grid-template-columns:1fr 300px;gap:18px}
+.side-panel{display:flex;flex-direction:column;gap:18px}
+
+/* CARD */
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}
+.card-header{padding:15px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.card-title{font-weight:600;font-size:14px}
+.card-body{padding:0}
+
+/* TABLE */
+.prop-table{width:100%;border-collapse:collapse}
+.prop-table th{padding:10px 16px;text-align:left;font-size:11px;letter-spacing:0.5px;color:var(--text-muted);font-weight:600;background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap}
+.prop-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.prop-table tr:last-child td{border-bottom:none}
+.prop-table tbody tr:hover td{background:var(--surface2);cursor:pointer}
+.prop-name{font-weight:600}
+.prop-addr{font-size:11.5px;color:var(--text-muted);margin-top:1px}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-green{background:var(--green-light);color:var(--green)}
+.badge-amber{background:var(--amber-light);color:var(--amber)}
+.badge-red{background:var(--red-light);color:var(--red)}
+.badge-blue{background:var(--blue-light);color:var(--blue)}
+.badge-gray{background:var(--surface2);color:var(--text-muted)}
+
+/* GROUP CHIPS */
+.group-chips{display:flex;gap:3px;flex-wrap:wrap}
+.group-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.group-chip-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;min-width:180px}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-muted);pointer-events:none}
+.search-input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);font-family:'Noto Sans TC',sans-serif;color:var(--text);outline:none;transition:border-color 0.15s}
+.search-input:focus{border-color:var(--accent)}
+.filter-select{padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;background:var(--surface);font-family:'Noto Sans TC',sans-serif;color:var(--text);outline:none;cursor:pointer}
+
+/* DETAIL PANEL */
+.detail-panel{position:fixed;top:0;right:-480px;bottom:0;width:480px;background:var(--surface);box-shadow:-4px 0 28px rgba(26,23,20,0.13);z-index:200;transition:right 0.3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow-y:auto}
+.detail-panel.open{right:0}
+.detail-backdrop{display:none;position:fixed;inset:0;background:rgba(26,23,20,0.28);z-index:199}
+.detail-backdrop.open{display:block}
+.detail-header{padding:20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;background:var(--surface);position:sticky;top:0;z-index:1}
+.detail-close{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:7px;cursor:pointer;color:var(--text-muted);background:var(--surface2);border:none;flex-shrink:0}
+.detail-close:hover{background:var(--border)}
+.detail-body{padding:20px 22px;flex:1}
+.detail-section{margin-bottom:20px}
+.detail-section-title{font-size:11px;letter-spacing:0.5px;color:var(--text-muted);font-weight:600;margin-bottom:10px}
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.detail-row:last-child{border-bottom:none}
+.detail-label{color:var(--text-muted)}
+
+/* DETAIL TABS */
+.detail-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 22px;background:var(--surface);position:sticky;top:69px;z-index:1}
+.detail-tab{padding:10px 12px;font-size:12.5px;font-weight:500;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;white-space:nowrap}
+.detail-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.detail-tab:hover:not(.active){color:var(--text)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,23,20,0.42);z-index:300;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:16px;padding:28px;width:540px;max-width:100%;box-shadow:0 20px 60px rgba(26,23,20,0.2);max-height:90vh;overflow-y:auto}
+.modal h2{font-size:20px;font-weight:700;margin-bottom:5px}
+.modal-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.form-group label{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:0.3px}
+.form-control{padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Noto Sans TC',sans-serif;background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s;width:100%}
+.form-control:focus{border-color:var(--accent)}
+textarea.form-control{resize:vertical;min-height:80px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* COLOR & ICON PICKERS */
+.color-picker{display:flex;gap:7px;flex-wrap:wrap}
+.color-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:transform 0.1s,border-color 0.1s}
+.color-swatch:hover{transform:scale(1.15)}
+.color-swatch.selected{border-color:var(--text)}
+.icon-picker{display:flex;gap:5px;flex-wrap:wrap}
+.icon-opt{width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid var(--border);font-size:17px;transition:all 0.1s;background:var(--surface)}
+.icon-opt:hover,.icon-opt.selected{border-color:var(--accent);background:var(--accent-light)}
+
+/* ASSIGN LIST */
+.assign-list{border:1px solid var(--border);border-radius:8px;max-height:260px;overflow-y:auto}
+.assign-item{display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s}
+.assign-item:last-child{border-bottom:none}
+.assign-item:hover{background:var(--surface2)}
+.assign-item input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.assign-name{font-size:13px;font-weight:600}
+.assign-sub{font-size:11.5px;color:var(--text-muted)}
+
+/* GROUPS */
+.groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.group-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s}
+.group-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(26,23,20,0.13)}
+.group-card-header{padding:18px 18px 14px;display:flex;align-items:flex-start;gap:12px}
+.group-icon-wrap{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.group-card-info{flex:1;min-width:0}
+.group-card-name{font-weight:700;font-size:14px}
+.group-card-meta{font-size:11px;color:var(--text-muted);margin-top:2px}
+.group-card-desc{font-size:11.5px;color:var(--text-muted);margin-top:4px;line-height:1.4}
+.group-card-stats{display:flex;border-top:1px solid var(--border)}
+.group-stat{flex:1;padding:11px 13px;text-align:center;border-right:1px solid var(--border)}
+.group-stat:last-child{border-right:none}
+.group-stat-val{font-size:20px;font-weight:700}
+.group-stat-label{font-size:10px;color:var(--text-muted);margin-top:2px}
+.group-card-actions{display:flex;gap:4px;margin-left:auto}
+.group-action-btn{width:26px;height:26px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--surface2);color:var(--text-muted);transition:all 0.1s;flex-shrink:0}
+.group-action-btn:hover{background:var(--border);color:var(--text)}
+.group-action-btn svg{width:12px;height:12px}
+
+/* GROUP DETAIL */
+.group-detail-header{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+.group-detail-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.back-btn{display:inline-flex;align-items:center;gap:5px;color:var(--text-muted);font-size:12.5px;cursor:pointer;padding:4px 0;margin-bottom:6px;transition:color 0.12s}
+.back-btn:hover{color:var(--text)}
+.back-btn svg{width:13px;height:13px}
+
+.group-banner{display:flex;align-items:center;gap:9px;padding:8px 14px;border-radius:9px;margin-bottom:12px;font-size:13px}
+.group-banner-clear{margin-left:auto;cursor:pointer;font-weight:600;opacity:0.75}
+
+/* DONUT */
+.donut-wrap{display:flex;flex-direction:column;align-items:center;padding:20px}
+.donut-svg{transform:rotate(-90deg)}
+.donut-label{display:flex;flex-direction:column;align-items:center;gap:1px;margin:12px 0 6px}
+.donut-big{font-size:30px;font-weight:700}
+.donut-sub{font-size:11.5px;color:var(--text-muted)}
+.donut-legend{display:flex;flex-direction:column;gap:7px;width:100%;margin-top:6px}
+.legend-item{display:flex;align-items:center;justify-content:space-between;font-size:12px}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.legend-left{display:flex;align-items:center;gap:7px;color:var(--text-muted)}
+.legend-val{font-weight:600}
+
+/* UPCOMING */
+.upcoming-list{padding:3px 0}
+.upcoming-item{padding:11px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s}
+.upcoming-item:last-child{border-bottom:none}
+.upcoming-item:hover{background:var(--surface2)}
+.upcoming-icon{width:33px;height:33px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.upcoming-icon svg{width:14px;height:14px}
+.upcoming-info{flex:1;min-width:0}
+.upcoming-name{font-weight:600;font-size:12.5px}
+.upcoming-detail{font-size:11px;color:var(--text-muted);margin-top:1px}
+.upcoming-days{font-size:11px;font-weight:700;white-space:nowrap}
+
+/* ANALYTICS */
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.bar-chart{padding:18px 20px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bar-label{width:80px;font-size:11.5px;color:var(--text-muted);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:7px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.bar-val{width:70px;text-align:right;font-size:12px;font-weight:600}
+.rent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+
+/* NOTIFICATIONS */
+.notif-list{display:flex;flex-direction:column;gap:10px}
+.notif-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:16px 18px;display:flex;align-items:flex-start;gap:14px;transition:transform 0.15s}
+.notif-card:hover{transform:translateY(-1px)}
+.notif-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.notif-icon svg{width:17px;height:17px}
+.notif-info{flex:1}
+.notif-title{font-weight:600;font-size:13.5px;margin-bottom:3px}
+.notif-desc{font-size:12.5px;color:var(--text-muted);line-height:1.4}
+.notif-time{font-size:11px;color:var(--text-muted);margin-top:5px}
+.notif-action{flex-shrink:0}
+.notif-section-title{font-size:11px;letter-spacing:0.5px;color:var(--text-muted);font-weight:600;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.notif-section-title:first-child{margin-top:0}
+.notif-empty{text-align:center;padding:48px 20px;color:var(--text-muted)}
+.notif-empty svg{width:36px;height:36px;margin:0 auto 10px;display:block;opacity:0.25}
+
+/* CONTACTS */
+.contact-card{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s}
+.contact-card:hover{background:var(--surface2)}
+.contact-card:last-child{border-bottom:none}
+.contact-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;color:#fff}
+.contact-info{flex:1}
+.contact-name{font-weight:600;font-size:13px}
+.contact-role{font-size:11.5px;color:var(--text-muted)}
+
+/* NOTE AREA */
+.note-area{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:'Noto Sans TC',sans-serif;font-size:13px;color:var(--text);background:var(--surface);resize:vertical;min-height:100px;outline:none;transition:border-color 0.15s}
+.note-area:focus{border-color:var(--accent)}
+
+/* SETUP WIZARD */
+.setup-overlay{display:none;position:fixed;inset:0;background:rgba(26,23,20,0.6);z-index:400;align-items:center;justify-content:center;padding:20px}
+.setup-overlay.open{display:flex}
+.setup-modal{background:var(--surface);border-radius:20px;padding:34px;width:580px;max-width:100%;box-shadow:0 24px 70px rgba(26,23,20,0.25);max-height:90vh;overflow-y:auto}
+.setup-step{display:none}
+.setup-step.active{display:block}
+.setup-header{text-align:center;margin-bottom:26px}
+.setup-header h2{font-size:22px;font-weight:700;margin-bottom:6px}
+.setup-header p{font-size:13.5px;color:var(--text-muted);line-height:1.6}
+.setup-steps-bar{display:flex;gap:6px;margin-bottom:26px}
+.setup-step-dot{flex:1;height:4px;border-radius:2px;background:var(--border)}
+.setup-step-dot.done{background:var(--accent)}
+.setup-code-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-family:monospace;font-size:11.5px;line-height:1.6;color:var(--text);overflow-x:auto;margin:12px 0;position:relative;white-space:pre-wrap;word-break:break-all}
+.setup-copy-btn{position:absolute;top:8px;right:8px;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all 0.1s}
+.setup-copy-btn:hover{background:var(--surface2)}
+.setup-tip{background:var(--blue-light);color:var(--blue);border-radius:8px;padding:10px 14px;font-size:12.5px;margin:10px 0;display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+.setup-tip svg{width:14px;height:14px;flex-shrink:0;margin-top:1px}
+.setup-actions{display:flex;gap:8px;justify-content:space-between;margin-top:20px;align-items:center}
+.setup-skip{font-size:12.5px;color:var(--text-muted);cursor:pointer;text-decoration:underline}
+.setup-skip:hover{color:var(--text)}
+.test-status{font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;display:none}
+.test-status.ok{background:var(--green-light);color:var(--green);display:inline-block}
+.test-status.fail{background:var(--red-light);color:var(--red);display:inline-block}
+
+/* EMPTY STATE */
+.empty-state{padding:40px;text-align:center;color:var(--text-muted)}
+.empty-state svg{width:36px;height:36px;margin:0 auto 10px;opacity:0.25;display:block}
+.empty-state h3{font-size:15px;font-weight:600;color:var(--text);margin-bottom:5px}
+.empty-state p{font-size:13px}
+
+/* 照片庫 */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.photo-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--surface2);border:1px solid var(--border);cursor:pointer;group:1}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.2s}
+.photo-thumb:hover img{transform:scale(1.05)}
+.photo-thumb-del{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(26,23,20,0.7);color:#fff;border:none;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s}
+.photo-thumb:hover .photo-thumb-del{opacity:1}
+.photo-upload-zone{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all 0.15s;color:var(--text-muted)}
+.photo-upload-zone:hover{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+.photo-upload-zone svg{width:28px;height:28px;margin:0 auto 8px;display:block;opacity:0.5}
+.photo-upload-zone p{font-size:13px;margin:0}
+.photo-upload-zone small{font-size:11px;opacity:0.7}
+/* 照片燈箱 */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;align-items:center;justify-content:center;padding:20px}
+.lightbox.open{display:flex}
+.lightbox img{max-width:90vw;max-height:85vh;border-radius:8px;object-fit:contain}
+.lightbox-close{position:fixed;top:20px;right:24px;color:#fff;font-size:28px;cursor:pointer;background:none;border:none;line-height:1;opacity:0.8}
+.lightbox-close:hover{opacity:1}
+.lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);color:#fff;font-size:32px;cursor:pointer;background:rgba(255,255,255,0.1);border:none;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background 0.15s}
+.lightbox-nav:hover{background:rgba(255,255,255,0.25)}
+.lightbox-prev{left:16px}
+.lightbox-next{right:16px}
+.lightbox-counter{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.7);font-size:13px}
+
+  .sidebar{width:54px}
+  .sidebar-logo h1,.sidebar-logo p,.nav-section,.nav-item span,.nav-badge,.nav-group-item span,.nav-group-count,.sidebar-footer{display:none}
+  .nav-item,.nav-group-item{justify-content:center;padding:11px}
+  .main,.topbar{margin-left:54px;left:54px}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .content-grid{grid-template-columns:1fr}
+  .page-wrap{padding:16px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>Appro<span>perty</span></h1>
+    <p>物業管理系統</p>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">總覽</div>
+    <div class="nav-item active" onclick="nav('dashboard',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>儀表板</span>
+    </div>
+    <div class="nav-item" onclick="nav('notifications',this)" id="nav-notif">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span>通知提醒</span>
+      <span class="nav-badge notif" id="notif-badge" style="display:none">0</span>
+    </div>
+    <div class="nav-section">物業</div>
+    <div class="nav-item" onclick="nav('properties',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>所有物業</span>
+    </div>
+    <div class="nav-item" id="nav-groups-main" onclick="nav('groups',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
+      <span>物業群組</span>
+    </div>
+    <div id="nav-group-list"></div>
+    <div class="nav-section">財務</div>
+    <div class="nav-item" onclick="nav('rent',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      <span>租金追蹤</span>
+      <span class="nav-badge" id="rent-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('contracts',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>合約管理</span>
+      <span class="nav-badge" id="contract-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('expenses',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      <span>費用支出</span>
+    </div>
+    <div class="nav-section">運營管理</div>
+    <div class="nav-item" onclick="nav('maintenance',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+      <span>維修管理</span>
+    </div>
+    <div class="nav-item" onclick="nav('contacts',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>聯絡人</span>
+    </div>
+    <div class="nav-section">分析</div>
+    <div class="nav-item" onclick="nav('analytics',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>數據分析</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer" id="sidebar-footer">15 筆物業 · 4 個群組</div>
+</aside>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-title" id="topbar-title">儀表板</div>
+  <div id="topbar-status" class="topbar-badge supabase-demo" onclick="openSetup()" style="cursor:pointer">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    示範模式 — 點擊連接 Supabase
+  </div>
+  <button class="btn btn-secondary btn-sm" onclick="exportCSV()">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    匯出 CSV
+  </button>
+</div>
+
+<!-- MAIN -->
+<div class="main"><div class="page-wrap">
+
+<!-- 儀表板 -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div><div class="page-title">早安 👋</div><div class="page-subtitle">您的物業投資組合總覽</div></div>
+    <button class="btn btn-primary" onclick="openAddPropModal()">
+      <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增物業
+    </button>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">物業總數</div><div class="stat-value" id="st-total">0</div><div class="stat-meta">所有類型合計</div></div>
+    <div class="stat-card"><div class="stat-label">出租率</div><div class="stat-value" id="st-occ">0%</div><div class="stat-meta"><span class="up" id="st-occ-sub">—</span></div></div>
+    <div class="stat-card"><div class="stat-label">每月租金收入</div><div class="stat-value" id="st-rev">NT$0</div><div class="stat-meta">已出租物業</div></div>
+    <div class="stat-card"><div class="stat-label">逾期未繳租金</div><div class="stat-value" id="st-ovd">0</div><div class="stat-meta"><span class="down">需要處理</span></div></div>
+  </div>
+  <div class="alerts-bar" id="alerts-bar"></div>
+  <div class="content-grid">
+    <div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">最近新增物業</div><button class="btn btn-secondary btn-sm" onclick="nav('properties',null)">查看全部</button></div>
+        <div class="card-body"><table class="prop-table"><thead><tr><th>物業名稱</th><th>類型</th><th>月租金</th><th>狀態</th></tr></thead><tbody id="dash-tbody"></tbody></table></div>
+      </div>
+    </div>
+    <div class="side-panel">
+      <div class="card">
+        <div class="card-header"><div class="card-title">物業類型分佈</div></div>
+        <div class="card-body">
+          <div class="donut-wrap">
+            <svg class="donut-svg" width="130" height="130" viewBox="0 0 130 130">
+              <circle cx="65" cy="65" r="46" fill="none" stroke="var(--surface2)" stroke-width="16"/>
+              <circle id="d-res" cx="65" cy="65" r="46" fill="none" stroke="#C8522A" stroke-width="16" stroke-dasharray="0 289" stroke-linecap="round"/>
+              <circle id="d-com" cx="65" cy="65" r="46" fill="none" stroke="#1E5E9A" stroke-width="16" stroke-dasharray="0 289" stroke-linecap="round"/>
+              <circle id="d-ind" cx="65" cy="65" r="46" fill="none" stroke="#2A7A52" stroke-width="16" stroke-dasharray="0 289" stroke-linecap="round"/>
+            </svg>
+            <div class="donut-label"><div class="donut-big" id="d-center">0</div><div class="donut-sub">筆物業</div></div>
+            <div class="donut-legend" id="d-legend"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">即將到期事項</div></div>
+        <div class="card-body"><div class="upcoming-list" id="upcoming-list"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 通知提醒 -->
+<div class="page" id="page-notifications">
+  <div class="page-header">
+    <div><div class="page-title">通知提醒</div><div class="page-subtitle">逾期租金與即將到期合約</div></div>
+  </div>
+  <div id="notif-content"></div>
+</div>
+
+<!-- 所有物業 -->
+<div class="page" id="page-properties">
+  <div class="page-header">
+    <div><div class="page-title">所有物業</div><div class="page-subtitle">您管理的所有物業清單</div></div>
+    <button class="btn btn-primary" onclick="openAddPropModal()">
+      <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增物業
+    </button>
+  </div>
+  <div id="prop-group-banner"></div>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" type="text" placeholder="搜尋物業名稱、地址或租客..." oninput="filterProps(this.value)">
+    </div>
+    <select class="filter-select" onchange="filterType(this.value)"><option value="">所有類型</option><option>住宅</option><option>商業</option><option>工業</option><option>綜合用途</option></select>
+    <select class="filter-select" onchange="filterStatus(this.value)"><option value="">所有狀態</option><option>已出租</option><option>空置</option><option>維修中</option></select>
+    <select class="filter-select" id="group-filter-sel" onchange="filterGroup(this.value)"><option value="">所有群組</option></select>
+  </div>
+  <div class="card"><div class="card-body">
+    <table class="prop-table"><thead><tr><th>物業名稱</th><th>類型</th><th>坪數</th><th>月租金</th><th>群組</th><th>狀態</th><th></th></tr></thead>
+    <tbody id="props-tbody"></tbody></table>
+  </div></div>
+</div>
+
+<!-- 物業群組 -->
+<div class="page" id="page-groups">
+  <div class="page-header">
+    <div><div class="page-title">物業群組</div><div class="page-subtitle">依地區、大樓、投資人或自訂標籤分類管理</div></div>
+    <button class="btn btn-primary" onclick="openAddGroupModal()">
+      <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增群組
+    </button>
+  </div>
+  <div id="groups-grid-wrap"></div>
+</div>
+
+<!-- 群組詳情 -->
+<div class="page" id="page-group-detail">
+  <div class="back-btn" onclick="nav('groups',document.getElementById('nav-groups-main'))">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>返回群組列表
+  </div>
+  <div class="group-detail-header" id="gd-header"></div>
+  <div class="stats-row" id="gd-stats"></div>
+  <div class="card">
+    <div class="card-header"><div class="card-title" id="gd-title">群組物業</div><button class="btn btn-secondary btn-sm" onclick="openAssignModal(currentGroupId)">管理物業</button></div>
+    <div class="card-body"><table class="prop-table"><thead><tr><th>物業名稱</th><th>類型</th><th>坪數</th><th>月租金</th><th>合約到期</th><th>狀態</th></tr></thead><tbody id="gd-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- 租金追蹤 -->
+<div class="page" id="page-rent">
+  <div class="page-header"><div><div class="page-title">租金追蹤</div><div class="page-subtitle">所有已出租物業的繳租狀況</div></div></div>
+  <div class="rent-grid">
+    <div class="stat-card"><div class="stat-label">本月已收租金</div><div class="stat-value" id="r-coll">NT$0</div><div class="stat-meta"><span class="up" id="r-pct">0%</span> 應收達成率</div></div>
+    <div class="stat-card"><div class="stat-label">逾期未繳</div><div class="stat-value" id="r-ovd">NT$0</div><div class="stat-meta"><span class="down" id="r-ovd-cnt">0 筆物業</span></div></div>
+    <div class="stat-card"><div class="stat-label">待繳中</div><div class="stat-value" id="r-pend">NT$0</div><div class="stat-meta" id="r-pend-cnt">0 筆物業</div></div>
+  </div>
+  <div class="card"><div class="card-body">
+    <table class="prop-table"><thead><tr><th>物業名稱</th><th>租客</th><th>繳租日</th><th>應繳金額</th><th>狀態</th><th>操作</th></tr></thead>
+    <tbody id="rent-tbody"></tbody></table>
+  </div></div>
+</div>
+
+<!-- 合約管理 -->
+<div class="page" id="page-contracts">
+  <div class="page-header"><div><div class="page-title">合約管理</div><div class="page-subtitle">租賃合約與續約追蹤</div></div></div>
+  <div class="card"><div class="card-body">
+    <table class="prop-table"><thead><tr><th>物業名稱</th><th>租客</th><th>起租日</th><th>到期日</th><th>月租金</th><th>剩餘天數</th><th>狀態</th><th></th></tr></thead>
+    <tbody id="contracts-tbody"></tbody></table>
+  </div></div>
+</div>
+
+<!-- 費用支出 -->
+<div class="page" id="page-expenses">
+  <div class="page-header">
+    <div><div class="page-title">費用支出</div><div class="page-subtitle">記錄各物業費用並計算淨收益</div></div>
+    <button class="btn btn-primary" onclick="openAddExpenseModal()">
+      <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增費用
+    </button>
+  </div>
+  <div class="stats-row stats-row-3" id="exp-stats"></div>
+  <div class="card"><div class="card-body">
+    <table class="prop-table"><thead><tr><th>物業名稱</th><th>費用類別</th><th>說明</th><th>日期</th><th>金額</th></tr></thead>
+    <tbody id="exp-tbody"></tbody></table>
+  </div></div>
+</div>
+
+<!-- 維修管理 -->
+<div class="page" id="page-maintenance">
+  <div class="page-header">
+    <div><div class="page-title">維修管理</div><div class="page-subtitle">追蹤維修申請與工單進度</div></div>
+    <button class="btn btn-primary" onclick="openAddMaintModal()">
+      <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增維修申請
+    </button>
+  </div>
+  <div class="stats-row stats-row-3" id="maint-stats"></div>
+  <div class="toolbar">
+    <select class="filter-select" onchange="filterMaintStatus(this.value)"><option value="">所有狀態</option><option>待處理</option><option>處理中</option><option>已完成</option></select>
+    <select class="filter-select" onchange="filterMaintProp(this.value)" id="maint-prop-sel"><option value="">所有物業</option></select>
+  </div>
+  <div class="card"><div class="card-body">
+    <table class="prop-table"><thead><tr><th>物業名稱</th><th>問題描述</th><th>優先等級</th><th>狀態</th><th>通報日期</th><th>費用</th><th></th></tr></thead>
+    <tbody id="maint-tbody"></tbody></table>
+  </div></div>
+</div>
+
+<!-- 聯絡人 -->
+<div class="page" id="page-contacts">
+  <div class="page-header">
+    <div><div class="page-title">聯絡人</div><div class="page-subtitle">租客、承包商與緊急聯絡人</div></div>
+    <button class="btn btn-primary" onclick="openAddContactModal()">
+      <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增聯絡人
+    </button>
+  </div>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" type="text" placeholder="搜尋聯絡人姓名、公司..." oninput="filterContacts(this.value)">
+    </div>
+    <select class="filter-select" onchange="filterContactRole(this.value)"><option value="">所有類別</option><option>租客</option><option>承包商</option><option>緊急聯絡</option><option>投資人</option><option>其他</option></select>
+  </div>
+  <div class="card"><div class="card-body"><div id="contacts-list"></div></div></div>
+</div>
+
+<!-- 數據分析 -->
+<div class="page" id="page-analytics">
+  <div class="page-header"><div><div class="page-title">數據分析</div><div class="page-subtitle">物業投資組合績效總覽</div></div></div>
+  <div class="metrics-grid">
+    <div class="stat-card"><div class="stat-label">平均每坪租金</div><div class="stat-value" id="an-sqft">NT$0</div><div class="stat-meta">組合平均值</div></div>
+    <div class="stat-card"><div class="stat-label">空置率</div><div class="stat-value" id="an-vac">0%</div><div class="stat-meta"><span class="down" id="an-vac-cnt">0 筆空置</span></div></div>
+    <div class="stat-card"><div class="stat-label">60天內到期合約</div><div class="stat-value" id="an-exp">0</div><div class="stat-meta">需要續約</div></div>
+  </div>
+  <div class="content-grid">
+    <div class="card"><div class="card-header"><div class="card-title">各類型物業租金收入</div></div><div class="card-body bar-chart" id="an-bars"></div></div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">租金收繳率</div></div>
+      <div class="card-body">
+        <div class="donut-wrap">
+          <svg class="donut-svg" width="130" height="130" viewBox="0 0 130 130">
+            <circle cx="65" cy="65" r="46" fill="none" stroke="var(--surface2)" stroke-width="16"/>
+            <circle id="an-d-paid" cx="65" cy="65" r="46" fill="none" stroke="#2A7A52" stroke-width="16" stroke-dasharray="0 289" stroke-linecap="round"/>
+            <circle id="an-d-ovd" cx="65" cy="65" r="46" fill="none" stroke="#C0302A" stroke-width="16" stroke-dasharray="0 289" stroke-linecap="round"/>
+            <circle id="an-d-pend" cx="65" cy="65" r="46" fill="none" stroke="#B07020" stroke-width="16" stroke-dasharray="0 289" stroke-linecap="round"/>
+          </svg>
+          <div class="donut-label"><div class="donut-big" id="an-rate">0%</div><div class="donut-sub">收繳率</div></div>
+          <div class="donut-legend" id="an-legend"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div></div><!-- /page-wrap /main -->
+
+<!-- 物業詳情側欄 -->
+<div class="detail-backdrop" id="detail-backdrop" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-header">
+    <div>
+      <div style="font-size:18px;font-weight:700" id="dp-name"></div>
+      <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px" id="dp-addr"></div>
+    </div>
+    <button class="detail-close" onclick="closeDetail()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="detail-tabs" id="dp-tabs">
+    <div class="detail-tab active" onclick="switchTab(0)">基本資料</div>
+    <div class="detail-tab" onclick="switchTab(1)">📷 照片</div>
+    <div class="detail-tab" onclick="switchTab(2)">維修記錄</div>
+    <div class="detail-tab" onclick="switchTab(3)">費用記錄</div>
+    <div class="detail-tab" onclick="switchTab(4)">備註</div>
+  </div>
+  <div class="detail-body" id="dp-body"></div>
+</div>
+
+<!-- 新增／編輯物業 Modal -->
+<div class="modal-overlay" id="add-prop-modal">
+  <div class="modal">
+    <h2 id="prop-modal-title">新增物業</h2><p class="modal-sub">填寫物業的基本資料與租約設定</p>
+    <div class="form-row">
+      <div class="form-group"><label>物業名稱</label><input class="form-control" id="fp-name" placeholder="例：信義區豪宅A棟"></div>
+      <div class="form-group"><label>物業類型</label><select class="form-control" id="fp-type"><option>住宅</option><option>商業</option><option>工業</option><option>綜合用途</option></select></div>
+    </div>
+    <div class="form-group"><label>地址</label><input class="form-control" id="fp-addr" placeholder="例：台北市信義區松仁路100號"></div>
+    <div class="form-row">
+      <div class="form-group"><label>坪數（坪）</label><input class="form-control" id="fp-size" type="number" placeholder="30"></div>
+      <div class="form-group"><label>月租金（NT$）</label><input class="form-control" id="fp-rent" type="number" placeholder="25000"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>租客姓名</label><input class="form-control" id="fp-tenant" placeholder="姓名"></div>
+      <div class="form-group"><label>物業狀態</label><select class="form-control" id="fp-status"><option>已出租</option><option>空置</option><option>維修中</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>起租日期</label><input class="form-control" id="fp-start" type="date"></div>
+      <div class="form-group"><label>合約到期日</label><input class="form-control" id="fp-end" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>每月繳租日</label>
+        <select class="form-control" id="fp-rentday">
+          <option value="1">1 日</option><option value="2">2 日</option><option value="3">3 日</option><option value="4">4 日</option><option value="5">5 日</option>
+          <option value="6">6 日</option><option value="7">7 日</option><option value="8">8 日</option><option value="9">9 日</option><option value="10">10 日</option>
+          <option value="11">11 日</option><option value="12">12 日</option><option value="13">13 日</option><option value="14">14 日</option><option value="15">15 日</option>
+          <option value="16">16 日</option><option value="17">17 日</option><option value="18">18 日</option><option value="19">19 日</option><option value="20">20 日</option>
+          <option value="21">21 日</option><option value="22">22 日</option><option value="23">23 日</option><option value="24">24 日</option><option value="25">25 日</option>
+          <option value="26">26 日</option><option value="27">27 日</option><option value="28">28 日</option>
+        </select>
+      </div>
+      <div class="form-group"><label>租金繳納狀態</label><select class="form-control" id="fp-pay"><option>已繳清</option><option>待繳中</option><option>逾期未繳</option></select></div>
+    </div>
+    <div class="form-group"><label>加入群組</label><div class="assign-list" id="fp-groups" style="max-height:110px"></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('add-prop-modal')">取消</button>
+      <button class="btn btn-primary" id="prop-modal-save" onclick="addProperty()">新增物業</button>
+    </div>
+  </div>
+</div>
+
+<!-- 群組 Modal -->
+<div class="modal-overlay" id="add-group-modal">
+  <div class="modal">
+    <h2 id="gm-title">新增群組</h2><p class="modal-sub">依地區、大樓、投資人或自訂標籤分類您的物業</p>
+    <div class="form-row">
+      <div class="form-group"><label>群組名稱</label><input class="form-control" id="gm-name" placeholder="例：信義區物業群"></div>
+      <div class="form-group"><label>群組類別</label><select class="form-control" id="gm-type"><option>地區</option><option>大樓</option><option>投資人</option><option>自訂</option></select></div>
+    </div>
+    <div class="form-group"><label>說明（選填）</label><input class="form-control" id="gm-desc" placeholder="簡短描述此群組"></div>
+    <div class="form-group"><label>圖示</label><div class="icon-picker" id="icon-picker"></div></div>
+    <div class="form-group"><label>顏色</label><div class="color-picker" id="color-picker"></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('add-group-modal')">取消</button>
+      <button class="btn btn-primary" id="gm-save" onclick="saveGroup()">建立群組</button>
+    </div>
+  </div>
+</div>
+
+<!-- 指派物業 Modal -->
+<div class="modal-overlay" id="assign-modal">
+  <div class="modal">
+    <h2 id="assign-title">管理群組物業</h2><p class="modal-sub">勾選屬於此群組的物業</p>
+    <div class="assign-list" id="assign-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('assign-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveAssignments()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增維修申請 Modal -->
+<div class="modal-overlay" id="add-maint-modal">
+  <div class="modal">
+    <h2 id="maint-modal-title">新增維修申請</h2><p class="modal-sub">記錄維修需求或工單</p>
+    <div class="form-row">
+      <div class="form-group"><label>物業</label><select class="form-control" id="mm-prop"></select></div>
+      <div class="form-group"><label>優先等級</label><select class="form-control" id="mm-priority"><option>低</option><option>中</option><option>高</option><option>緊急</option></select></div>
+    </div>
+    <div class="form-group"><label>問題標題</label><input class="form-control" id="mm-title" placeholder="例：冷氣故障"></div>
+    <div class="form-group"><label>詳細說明</label><textarea class="form-control" id="mm-desc" placeholder="說明問題詳情..."></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>處理狀態</label><select class="form-control" id="mm-status"><option>待處理</option><option>處理中</option><option>已完成</option></select></div>
+      <div class="form-group"><label>預估費用（NT$）</label><input class="form-control" id="mm-cost" type="number" placeholder="0"></div>
+    </div>
+    <div class="form-group"><label>通報日期</label><input class="form-control" id="mm-date" type="date"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('add-maint-modal')">取消</button>
+      <button class="btn btn-primary" id="maint-save-btn" onclick="saveMaintenance()">儲存申請</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增費用 Modal -->
+<div class="modal-overlay" id="add-expense-modal">
+  <div class="modal">
+    <h2>新增費用</h2><p class="modal-sub">記錄物業相關費用支出</p>
+    <div class="form-row">
+      <div class="form-group"><label>物業</label><select class="form-control" id="em-prop"></select></div>
+      <div class="form-group"><label>費用類別</label><select class="form-control" id="em-cat"><option>🔧 維修工程</option><option>🧹 清潔服務</option><option>⚡ 水電費</option><option>🏛️ 保險費</option><option>📋 法務費用</option><option>🌿 園藝景觀</option><option>🔒 保全安全</option><option>🏛️ 管理費</option><option>📦 其他</option></select></div>
+    </div>
+    <div class="form-group"><label>說明</label><input class="form-control" id="em-desc" placeholder="費用說明"></div>
+    <div class="form-row">
+      <div class="form-group"><label>金額（NT$）</label><input class="form-control" id="em-amt" type="number" placeholder="0"></div>
+      <div class="form-group"><label>日期</label><input class="form-control" id="em-date" type="date"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('add-expense-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveExpense()">新增費用</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增聯絡人 Modal -->
+<div class="modal-overlay" id="add-contact-modal">
+  <div class="modal">
+    <h2>新增聯絡人</h2><p class="modal-sub">新增租客、承包商或其他聯絡人</p>
+    <div class="form-row">
+      <div class="form-group"><label>姓名</label><input class="form-control" id="cm-name" placeholder="姓名"></div>
+      <div class="form-group"><label>類別</label><select class="form-control" id="cm-role"><option>租客</option><option>承包商</option><option>緊急聯絡</option><option>投資人</option><option>其他</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>電子郵件</label><input class="form-control" id="cm-email" placeholder="email@example.com" type="email"></div>
+      <div class="form-group"><label>電話</label><input class="form-control" id="cm-phone" placeholder="0912-345-678"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>關聯物業</label><select class="form-control" id="cm-prop"><option value="">無</option></select></div>
+      <div class="form-group"><label>公司 / 專業領域</label><input class="form-control" id="cm-company" placeholder="例：台灣水電工程行"></div>
+    </div>
+    <div class="form-group"><label>備註</label><textarea class="form-control" id="cm-notes" placeholder="其他備註..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('add-contact-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveContact()">新增聯絡人</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supabase 設定精靈 -->
+<div class="setup-overlay" id="setup-overlay">
+  <div class="setup-modal">
+    <div class="setup-steps-bar" id="setup-dots"></div>
+    <div class="setup-step active" id="setup-s1">
+      <div class="setup-header">
+        <div style="font-size:28px;font-weight:700;margin-bottom:8px">Appro<span style="color:var(--accent)">perty</span></div>
+        <h2>連接 Supabase 雲端資料庫</h2>
+        <p>將資料儲存在雲端，讓整個團隊可以從任何裝置存取。設定約需 15 分鐘。</p>
+      </div>
+      <div class="setup-tip"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>Supabase 免費方案支援最多 500MB 資料及無限團隊成員，無需信用卡。</div></div>
+      <div class="setup-actions"><span class="setup-skip" onclick="closeSetup()">略過，使用示範模式</span><button class="btn btn-primary" onclick="setupStep(2)">開始設定 →</button></div>
+    </div>
+    <div class="setup-step" id="setup-s2">
+      <div class="setup-header"><h2>建立 Supabase 專案</h2><p>首先在 Supabase 建立免費帳號與專案。</p></div>
+      <ol style="font-size:13.5px;line-height:2.2;padding-left:18px;color:var(--text-muted)">
+        <li>前往 <strong style="color:var(--text)">supabase.com</strong> 免費註冊</li>
+        <li>點擊 <strong style="color:var(--text)">New Project（新專案）</strong></li>
+        <li>輸入名稱（例：Approperty）並設定強密碼</li>
+        <li>選擇離台灣最近的區域（建議 Tokyo 或 Singapore）</li>
+        <li>點擊 <strong style="color:var(--text)">Create new project</strong>，等待約 2 分鐘完成建立</li>
+      </ol>
+      <div class="setup-actions"><span class="setup-skip" onclick="closeSetup()">略過</span><button class="btn btn-primary" onclick="setupStep(3)">完成，下一步 →</button></div>
+    </div>
+    <div class="setup-step" id="setup-s3">
+      <div class="setup-header"><h2>建立資料庫資料表</h2><p>在 Supabase 專案中開啟 <strong>SQL Editor</strong>，貼上以下指令並執行。</p></div>
+      <div class="setup-code-block" id="sql-block">-- Approperty 資料庫結構
+create table properties (
+  id bigint generated always as identity primary key,
+  name text not null,
+  address text,
+  type text,
+  size numeric,
+  rent int,
+  tenant text,
+  status text default '空置',
+  lease_start date,
+  lease_end date,
+  payment text default '待繳中',
+  notes text,
+  created_at timestamptz default now()
+);
+
+create table groups (
+  id text primary key,
+  name text not null,
+  type text,
+  description text,
+  icon text,
+  color text,
+  property_ids int[] default '{}'
+);
+
+create table maintenance (
+  id bigint generated always as identity primary key,
+  property_id bigint references properties(id) on delete cascade,
+  title text not null,
+  description text,
+  priority text default '中',
+  status text default '待處理',
+  cost int default 0,
+  reported_date date,
+  created_at timestamptz default now()
+);
+
+create table expenses (
+  id bigint generated always as identity primary key,
+  property_id bigint references properties(id) on delete cascade,
+  category text,
+  description text,
+  amount int not null,
+  expense_date date,
+  created_at timestamptz default now()
+);
+
+create table contacts (
+  id bigint generated always as identity primary key,
+  name text not null,
+  role text,
+  email text,
+  phone text,
+  company text,
+  property_id bigint references properties(id) on delete set null,
+  notes text,
+  created_at timestamptz default now()
+);
+
+alter table properties enable row level security;
+alter table groups enable row level security;
+alter table maintenance enable row level security;
+alter table expenses enable row level security;
+alter table contacts enable row level security;
+
+create policy "Allow all" on properties for all using (true) with check (true);
+create policy "Allow all" on groups for all using (true) with check (true);
+create policy "Allow all" on maintenance for all using (true) with check (true);
+create policy "Allow all" on expenses for all using (true) with check (true);
+create policy "Allow all" on contacts for all using (true) with check (true);</div>
+      <button class="setup-copy-btn" onclick="copySQL()">複製</button>
+      <div class="setup-tip"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>在 Supabase 中：前往 <strong>SQL Editor → New query</strong>，貼上指令後點擊 <strong>Run（執行）</strong>。</div></div>
+      <div class="setup-actions"><span class="setup-skip" onclick="closeSetup()">略過</span><button class="btn btn-primary" onclick="setupStep(4)">完成，下一步 →</button></div>
+    </div>
+    <div class="setup-step" id="setup-s4">
+      <div class="setup-header"><h2>輸入 API 金鑰</h2><p>在 Supabase 前往 <strong>Project Settings → API</strong> 複製以下資訊。</p></div>
+      <div class="form-group"><label>專案網址（Project URL）</label><input class="form-control" id="sb-url" placeholder="https://xxxxxxxxxxxx.supabase.co"></div>
+      <div class="form-group"><label>公開金鑰（Anon / Public Key）</label><input class="form-control" id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></div>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+        <button class="btn btn-secondary" onclick="testSupabase()">測試連線</button>
+        <span class="test-status" id="test-status"></span>
+      </div>
+      <div class="setup-actions" style="margin-top:16px">
+        <span class="setup-skip" onclick="closeSetup()">略過</span>
+        <button class="btn btn-primary" onclick="connectSupabase()">連接並同步 →</button>
+      </div>
+    </div>
+    <div class="setup-step" id="setup-s5">
+      <div class="setup-header">
+        <div style="font-size:40px;margin-bottom:10px">🎉</div>
+        <h2>連接成功！</h2>
+        <p>Approperty 已與 Supabase 同步。您的所有資料已儲存至雲端，團隊成員可從任何裝置存取。</p>
+      </div>
+      <div class="setup-tip"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>將此 HTML 檔案分享給您的團隊成員。每位成員只需在自己的瀏覽器中輸入一次 API 金鑰。</div></div>
+      <div class="setup-actions" style="justify-content:flex-end"><button class="btn btn-primary" onclick="closeSetup()">開始使用 →</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 照片燈箱 -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <button class="lightbox-nav lightbox-prev" onclick="event.stopPropagation();lightboxNav(-1)">‹</button>
+  <img id="lightbox-img" src="" alt="物業照片" onclick="event.stopPropagation()">
+  <button class="lightbox-nav lightbox-next" onclick="event.stopPropagation();lightboxNav(1)">›</button>
+  <div class="lightbox-counter" id="lightbox-counter"></div>
+</div>
+
+<script>
+// ── 工具函數 ──────────────────────────────────────────────────────────────────
+const TODAY = new Date();
+const dfn = s => Math.round((new Date(s) - TODAY) / 86400000);
+const fmt = n => 'NT$' + Number(n).toLocaleString();
+const fmtD = s => {
+  if (!s) return '—';
+  const d = new Date(s);
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+};
+const el = id => document.getElementById(id);
+const closeModal = id => { el(id).style.display='none'; };
+const openModal = id => { const m=el(id); m.style.cssText='display:flex!important;position:fixed!important;inset:0!important;background:rgba(26,23,20,0.42)!important;z-index:300!important;align-items:center!important;justify-content:center!important;padding:20px!important'; };
+
+// ── 示範資料（台灣地址、NT$、坪） ─────────────────────────────────────────
+let properties = [
+  {id:1,name:'信義豪庭 A 棟',address:'台北市信義區松仁路68號3樓',type:'住宅',size:42,rent:65000,tenant:'陳大明',status:'已出租',leaseStart:'2023-06-01',leaseEnd:'2025-05-31',payment:'已繳清',rentDay:5,notes:''},
+  {id:2,name:'南京東路商辦',address:'台北市中山區南京東路二段100號8樓',type:'商業',size:120,rent:180000,tenant:'台灣科技有限公司',status:'已出租',leaseStart:'2022-01-01',leaseEnd:'2025-04-15',payment:'逾期未繳',rentDay:1,notes:''},
+  {id:3,name:'淡水河景套房',address:'新北市淡水區中正路55號2樓',type:'住宅',size:18,rent:18000,tenant:'林小美',status:'已出租',leaseStart:'2024-03-01',leaseEnd:'2025-09-30',payment:'已繳清',rentDay:10,notes:''},
+  {id:4,name:'板橋透天厝',address:'新北市板橋區文化路一段200號',type:'住宅',size:65,rent:55000,tenant:'王志偉',status:'已出租',leaseStart:'2023-09-01',leaseEnd:'2025-08-31',payment:'待繳中',rentDay:5,notes:''},
+  {id:5,name:'台中辦公大樓',address:'台中市西屯區台灣大道三段500號12樓',type:'商業',size:280,rent:320000,tenant:'中部創業股份有限公司',status:'已出租',leaseStart:'2021-07-01',leaseEnd:'2026-06-30',payment:'已繳清',rentDay:1,notes:''},
+  {id:6,name:'師大附近雅房',address:'台北市大安區和平東路一段150巷8號',type:'住宅',size:8,rent:12000,tenant:'',status:'空置',leaseStart:'',leaseEnd:'',payment:'—',rentDay:1,notes:''},
+  {id:7,name:'林口工業廠房',address:'新北市林口區工業東路三路88號',type:'工業',size:500,rent:280000,tenant:'快遞倉儲股份有限公司',status:'已出租',leaseStart:'2020-01-01',leaseEnd:'2025-12-31',payment:'已繳清',rentDay:15,notes:''},
+  {id:8,name:'永和一樓店面',address:'新北市永和區中山路一段45號',type:'商業',size:30,rent:45000,tenant:'李建國',status:'已出租',leaseStart:'2024-01-15',leaseEnd:'2025-04-30',payment:'逾期未繳',rentDay:1,notes:''},
+  {id:9,name:'高雄複合用途大樓',address:'高雄市前金區中正四路12號',type:'綜合用途',size:380,rent:420000,tenant:'南台灣開發集團',status:'已出租',leaseStart:'2022-05-01',leaseEnd:'2025-11-30',payment:'已繳清',rentDay:10,notes:''},
+  {id:10,name:'新竹竹北套房',address:'新竹縣竹北市光明六路東一段200號4樓',type:'住宅',size:22,rent:22000,tenant:'',status:'維修中',leaseStart:'',leaseEnd:'',payment:'—',rentDay:1,notes:''},
+  {id:11,name:'三重工廠',address:'新北市三重區重新路五段609巷50號',type:'工業',size:400,rent:220000,tenant:'台灣鋼鐵工業',status:'已出租',leaseStart:'2023-03-01',leaseEnd:'2025-05-20',payment:'已繳清',rentDay:15,notes:''},
+  {id:12,name:'中山區零售店面',address:'台北市中山區中山北路二段20號',type:'商業',size:55,rent:95000,tenant:'新鮮超市',status:'已出租',leaseStart:'2023-11-01',leaseEnd:'2025-10-31',payment:'待繳中',rentDay:5,notes:''},
+  {id:13,name:'大安區兩房公寓',address:'台北市大安區忠孝東路四段181巷40弄5號',type:'住宅',size:35,rent:42000,tenant:'吳雅芳',status:'已出租',leaseStart:'2024-06-01',leaseEnd:'2026-05-31',payment:'已繳清',rentDay:10,notes:''},
+  {id:14,name:'桃園倉儲中心',address:'桃園市中壢區環中東路二路500號',type:'工業',size:800,rent:350000,tenant:'全球運輸有限公司',status:'已出租',leaseStart:'2021-09-01',leaseEnd:'2025-08-31',payment:'逾期未繳',rentDay:1,notes:''},
+  {id:15,name:'天母花園別墅',address:'台北市士林區中山北路七段130號',type:'住宅',size:80,rent:120000,tenant:'張家豪',status:'已出租',leaseStart:'2023-04-01',leaseEnd:'2025-06-30',payment:'已繳清',rentDay:5,notes:''},
+];
+let nextId = 16;
+
+let groups = [
+  {id:'g1',name:'台北市中心',type:'地區',desc:'大安、信義、中山區物業',icon:'🏙️',color:'#1E5E9A',propertyIds:[1,2,12,13]},
+  {id:'g2',name:'新北市物業群',type:'地區',desc:'板橋、永和、淡水、三重',icon:'🌇',color:'#2A7A52',propertyIds:[3,4,8,11]},
+  {id:'g3',name:'鑫昌投資集團',type:'投資人',desc:'鑫昌投資人持有物業',icon:'💼',color:'#C8522A',propertyIds:[1,4,7,14]},
+  {id:'g4',name:'工業區物業',type:'大樓',desc:'林口與三重工業廠房',icon:'🏭',color:'#7A5230',propertyIds:[7,11,14]},
+];
+let nextGid = 5;
+
+let maintenance = [
+  {id:1,propId:2,title:'冷氣系統故障',desc:'8樓辦公室冷氣無法運作，影響員工上班。',priority:'高',status:'待處理',cost:0,date:'2026-03-20'},
+  {id:2,propId:8,title:'屋頂漏水',desc:'連日大雨後，屋頂天窗附近開始滲水。',priority:'緊急',status:'處理中',cost:15000,date:'2026-03-15'},
+  {id:3,propId:1,title:'更換大門門鎖',desc:'鑰匙卡卡，需要更換新鎖具。',priority:'低',status:'已完成',cost:2400,date:'2026-03-01'},
+  {id:4,propId:14,title:'倉庫電動門故障',desc:'電動捲門控制器無反應，無法開關。',priority:'高',status:'待處理',cost:0,date:'2026-03-25'},
+];
+let nextMid = 5;
+
+let expenses = [
+  {id:1,propId:2,cat:'🔧 維修工程',desc:'緊急水管維修',amt:8500,date:'2026-03-10'},
+  {id:2,propId:7,cat:'⚡ 水電費',desc:'第一季電費',amt:18000,date:'2026-03-01'},
+  {id:3,propId:1,cat:'🧹 清潔服務',desc:'年度大掃除',amt:4500,date:'2026-02-20'},
+  {id:4,propId:14,cat:'🏛️ 保險費',desc:'年度火險與地震險',amt:52000,date:'2026-01-15'},
+  {id:5,propId:9,cat:'🔒 保全安全',desc:'保全系統年度維護',amt:12000,date:'2026-02-01'},
+];
+let nextEid = 6;
+
+let contacts = [
+  {id:1,name:'陳大明',role:'租客',email:'daming.chen@email.com',phone:'0912-345-678',company:'',propId:1,notes:'2020年起的長期租客，按時繳租'},
+  {id:2,name:'林小美',role:'租客',email:'xiaomei.lin@email.com',phone:'0923-456-789',company:'',propId:3,notes:''},
+  {id:3,name:'台灣水電工程行',role:'承包商',email:'service@twplumbing.com.tw',phone:'02-2345-6789',company:'台灣水電工程行',propId:null,notes:'24小時緊急維修，施工品質佳'},
+  {id:4,name:'李建國',role:'租客',email:'jianguo.li@email.com',phone:'0934-567-890',company:'',propId:8,notes:'常常延遲繳租，需特別注意'},
+  {id:5,name:'鑫昌投資集團',role:'投資人',email:'contact@xin-chang.com.tw',phone:'02-8888-9999',company:'鑫昌投資集團',propId:null,notes:'主要聯絡人：張董事長'},
+];
+let nextCid = 6;
+
+// ── Supabase 設定 ─────────────────────────────────────────────────────────────
+let sbUrl = localStorage.getItem('sb_url') || '';
+let sbKey = localStorage.getItem('sb_key') || '';
+let useSupabase = false;
+
+async function sbFetch(path, opts={}) {
+  const res = await fetch(sbUrl + '/rest/v1/' + path, {
+    ...opts,
+    headers: { 'apikey': sbKey, 'Authorization': 'Bearer ' + sbKey, 'Content-Type': 'application/json', 'Prefer': 'return=representation', ...(opts.headers||{}) }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+async function loadFromSupabase() {
+  try {
+    const [props, grps, maints, exps, conts] = await Promise.all([
+      sbFetch('properties?select=*&order=id'),
+      sbFetch('groups?select=*'),
+      sbFetch('maintenance?select=*&order=id'),
+      sbFetch('expenses?select=*&order=id'),
+      sbFetch('contacts?select=*&order=id'),
+    ]);
+    properties = props.map(p => ({id:p.id,name:p.name,address:p.address||'',type:p.type||'住宅',size:p.size||0,rent:p.rent||0,tenant:p.tenant||'',status:p.status||'空置',leaseStart:p.lease_start||'',leaseEnd:p.lease_end||'',payment:p.payment||'—',notes:p.notes||''}));
+    groups = grps.map(g => ({id:g.id,name:g.name,type:g.type,desc:g.description||'',icon:g.icon||'🏠',color:g.color||'#C8522A',propertyIds:g.property_ids||[]}));
+    maintenance = maints.map(m => ({id:m.id,propId:m.property_id,title:m.title,desc:m.description||'',priority:m.priority||'中',status:m.status||'待處理',cost:m.cost||0,date:m.reported_date||''}));
+    expenses = exps.map(e => ({id:e.id,propId:e.property_id,cat:e.category||'📦 其他',desc:e.description||'',amt:e.amount||0,date:e.expense_date||''}));
+    contacts = conts.map(c => ({id:c.id,name:c.name,role:c.role||'其他',email:c.email||'',phone:c.phone||'',company:c.company||'',propId:c.property_id||null,notes:c.notes||''}));
+    useSupabase = true;
+    el('topbar-status').className = 'topbar-badge supabase-ok';
+    el('topbar-status').innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg> 已連接 Supabase';
+    el('topbar-status').onclick = null;
+    el('topbar-status').style.cursor = 'default';
+    refreshAll();
+  } catch(e) { console.error('Supabase 載入錯誤', e); }
+}
+
+// ── 導航 ──────────────────────────────────────────────────────────────────────
+let currentPage = 'dashboard';
+let currentGroupId = null;
+let typeF='', statusF='', groupF='', searchF='', maintStatusF='', maintPropF='', contactRoleF='', contactSearchF='';
+
+const PAGE_TITLES = {dashboard:'儀表板',notifications:'通知提醒',properties:'所有物業',groups:'物業群組','group-detail':'群組詳情',rent:'租金追蹤',contracts:'合約管理',expenses:'費用支出',maintenance:'維修管理',contacts:'聯絡人',analytics:'數據分析'};
+
+function nav(page, navEl) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  el('page-' + page)?.classList.add('active');
+  document.querySelectorAll('.nav-item,.nav-group-item').forEach(n => n.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  el('topbar-title').textContent = PAGE_TITLES[page] || page;
+  renderPage(page);
+}
+
+function renderPage(page) {
+  ({dashboard:renderDashboard,notifications:renderNotifications,properties:renderProperties,groups:renderGroups,'group-detail':()=>renderGroupDetail(currentGroupId),rent:renderRent,contracts:renderContracts,expenses:renderExpenses,maintenance:renderMaintenance,contacts:renderContacts,analytics:renderAnalytics}[page]||(() => {}))();
+}
+
+function refreshAll() { refreshNavGroups(); renderPage(currentPage); updateNotifBadge(); }
+
+function refreshNavGroups() {
+  el('nav-group-list').innerHTML = groups.map(g =>
+    `<div class="nav-group-item" id="ngi-${g.id}" onclick="openGroupDetail('${g.id}',this)">
+      <div class="nav-group-dot" style="background:${g.color}"></div>
+      <span>${g.name}</span>
+      <span class="nav-group-count">${g.propertyIds.length}</span>
+    </div>`).join('');
+  const sel = el('group-filter-sel');
+  const prev = sel?.value;
+  if (sel) { sel.innerHTML = '<option value="">所有群組</option>' + groups.map(g => `<option value="${g.id}">${g.icon} ${g.name}</option>`).join(''); sel.value = prev; }
+  el('sidebar-footer').textContent = `${properties.length} 筆物業 · ${groups.length} 個群組`;
+  ['mm-prop','em-prop','cm-prop'].forEach(sid => {
+    const s = el(sid); if (!s) return;
+    s.innerHTML = (sid==='cm-prop'?'<option value="">無</option>':'') + properties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  });
+  const ms = el('maint-prop-sel');
+  if (ms) ms.innerHTML = '<option value="">所有物業</option>' + properties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+function openGroupDetail(gid, navEl) {
+  currentGroupId = gid;
+  document.querySelectorAll('.nav-item,.nav-group-item').forEach(n => n.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  nav('group-detail', null);
+}
+
+// ── 通知 ──────────────────────────────────────────────────────────────────────
+function getNotifications() {
+  const notifs = [];
+  properties.filter(p => p.payment === '逾期未繳').forEach(p => {
+    notifs.push({type:'overdue',priority:'high',prop:p,title:'租金逾期未繳',desc:`${p.name} — 租客 ${p.tenant||'（空置）'} 本月租金 ${fmt(p.rent)} 尚未繳納。`});
+  });
+  properties.filter(p => p.leaseEnd && dfn(p.leaseEnd) >= 0 && dfn(p.leaseEnd) <= 90).sort((a,b)=>dfn(a.leaseEnd)-dfn(b.leaseEnd)).forEach(p => {
+    const d = dfn(p.leaseEnd);
+    notifs.push({type:'contract',priority:d<=30?'high':'medium',prop:p,title:`合約將於 ${d} 天後到期`,desc:`${p.name} — 與 ${p.tenant||'租客'} 的合約將於 ${fmtD(p.leaseEnd)} 到期。`});
+  });
+  maintenance.filter(m => m.status === '待處理' && (m.priority === '緊急' || m.priority === '高')).forEach(m => {
+    const p = properties.find(x => x.id === m.propId);
+    if (p) notifs.push({type:'maintenance',priority:m.priority==='緊急'?'high':'medium',prop:p,title:`${m.priority}維修：${m.title}`,desc:`${p.name} — ${m.desc||'需要立即處理。'}`});
+  });
+  return notifs;
+}
+
+function updateNotifBadge() {
+  const notifs = getNotifications();
+  const badge = el('notif-badge');
+  if (notifs.length > 0) { badge.style.display=''; badge.textContent=notifs.length; }
+  else { badge.style.display='none'; }
+}
+
+function renderNotifications() {
+  const notifs = getNotifications();
+  const wrap = el('notif-content');
+  if (!notifs.length) {
+    wrap.innerHTML = `<div class="notif-empty"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg><h3>目前沒有待處理事項</h3><p>所有租金與合約狀態正常。</p></div>`;
+    return;
+  }
+  const high = notifs.filter(n => n.priority === 'high');
+  const med = notifs.filter(n => n.priority === 'medium');
+  let html = '';
+  if (high.length) html += `<div class="notif-section-title">🔴 緊急 — ${high.length} 項</div><div class="notif-list">${high.map(notifCard).join('')}</div>`;
+  if (med.length) html += `<div class="notif-section-title">🟡 即將到期 — ${med.length} 項</div><div class="notif-list">${med.map(notifCard).join('')}</div>`;
+  wrap.innerHTML = html;
+}
+
+function notifCard(n) {
+  const isHigh = n.priority === 'high';
+  const ic = n.type==='overdue'?'var(--red)':isHigh?'var(--red)':'var(--amber)';
+  const bg = n.type==='overdue'?'var(--red-light)':isHigh?'var(--red-light)':'var(--amber-light)';
+  const iconPath = {overdue:'M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6',contract:'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',maintenance:'M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z'}[n.type];
+  return `<div class="notif-card" onclick="openDetail(${n.prop.id})" style="cursor:pointer;border-left:3px solid ${ic}">
+    <div class="notif-icon" style="background:${bg}"><svg fill="none" stroke="${ic}" stroke-width="2" viewBox="0 0 24 24"><path d="${iconPath}"/></svg></div>
+    <div class="notif-info"><div class="notif-title">${n.title}</div><div class="notif-desc">${n.desc}</div><div class="notif-time">${n.prop.address}</div></div>
+    <div class="notif-action"><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openDetail(${n.prop.id})">查看</button></div>
+  </div>`;
+}
+
+// ── 儀表板 ────────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const occ = properties.filter(p => p.status === '已出租');
+  const rev = occ.reduce((s,p) => s+p.rent, 0);
+  const ovdCnt = properties.filter(p => p.payment === '逾期未繳').length;
+  el('st-total').textContent = properties.length;
+  el('st-occ').textContent = Math.round(occ.length/properties.length*100) + '%';
+  el('st-occ-sub').textContent = `${occ.length} / ${properties.length} 已出租`;
+  el('st-rev').textContent = fmt(rev);
+  el('st-ovd').textContent = ovdCnt;
+
+  const ab = el('alerts-bar'); ab.innerHTML = '';
+  const ovdP = properties.filter(p=>p.payment==='逾期未繳');
+  const e30 = properties.filter(p=>p.leaseEnd&&dfn(p.leaseEnd)>=0&&dfn(p.leaseEnd)<=30);
+  const e90 = properties.filter(p=>p.leaseEnd&&dfn(p.leaseEnd)>30&&dfn(p.leaseEnd)<=90);
+  const vac = properties.filter(p=>p.status==='空置');
+  const urgM = maintenance.filter(m=>m.status!=='已完成'&&(m.priority==='緊急'||m.priority==='高'));
+  if(ovdP.length) ab.innerHTML+=chip('red','M12 8v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z',`${ovdP.length} 筆逾期未繳租金`,"nav('rent',null)");
+  if(e30.length) ab.innerHTML+=chip('red','M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',`${e30.length} 份合約 30 天內到期`,"nav('contracts',null)");
+  if(e90.length) ab.innerHTML+=chip('amber','M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',`${e90.length} 份合約 31–90 天內到期`,"nav('contracts',null)");
+  if(urgM.length) ab.innerHTML+=chip('amber','M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z',`${urgM.length} 項高優先維修待處理`,"nav('maintenance',null)");
+  if(vac.length) ab.innerHTML+=chip('blue','M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z',`${vac.length} 筆物業空置中`,"nav('properties',null)");
+  el('rent-badge').textContent = ovdP.length;
+  el('contract-badge').textContent = e30.length + e90.length;
+
+  el('dash-tbody').innerHTML = [...properties].slice(-6).reverse().map(p =>
+    `<tr onclick="openDetail(${p.id})"><td><div class="prop-name">${p.name}</div><div class="prop-addr">${p.address}</div></td><td><span class="badge badge-gray">${p.type}</span></td><td>${fmt(p.rent)}</td><td>${sBadge(p.status)}</td></tr>`).join('');
+
+  const types=['住宅','商業','工業','綜合用途'];
+  const cols={住宅:'#C8522A',商業:'#1E5E9A',工業:'#2A7A52',綜合用途:'#B07020'};
+  const circ=289; let off=0;
+  const counts={}; types.forEach(t=>counts[t]=properties.filter(p=>p.type===t).length);
+  [['d-res','住宅'],['d-com','商業'],['d-ind','工業']].forEach(([id,t])=>{
+    const len=(counts[t]/properties.length)*circ;
+    el(id).setAttribute('stroke-dasharray',len+' '+(circ-len));
+    el(id).setAttribute('stroke-dashoffset',-off); off+=len;
+  });
+  el('d-center').textContent = properties.length;
+  el('d-legend').innerHTML = Object.entries(counts).map(([t,c])=>
+    `<div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:${cols[t]}"></div>${t}</div><div class="legend-val">${c}</div></div>`).join('');
+
+  const upcoming = properties.filter(p=>p.leaseEnd&&dfn(p.leaseEnd)>=0&&dfn(p.leaseEnd)<=90).sort((a,b)=>dfn(a.leaseEnd)-dfn(b.leaseEnd)).slice(0,5);
+  const ul = el('upcoming-list');
+  if (!upcoming.length) { ul.innerHTML='<div class="empty-state"><p>90 天內無到期合約</p></div>'; return; }
+  ul.innerHTML = upcoming.map(p=>{
+    const d=dfn(p.leaseEnd),urg=d<=30;
+    const bg=urg?'var(--red-light)':'var(--amber-light)',ic=urg?'var(--red)':'var(--amber)';
+    return `<div class="upcoming-item" onclick="openDetail(${p.id})">
+      <div class="upcoming-icon" style="background:${bg}"><svg fill="none" stroke="${ic}" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div class="upcoming-info"><div class="upcoming-name">${p.name}</div><div class="upcoming-detail">${p.tenant||'空置'} · ${fmtD(p.leaseEnd)}</div></div>
+      <div class="upcoming-days" style="color:${ic}">${d}天</div>
+    </div>`;
+  }).join('');
+}
+
+function chip(cls,path,txt,onclick) {
+  return `<div class="alert-chip ${cls}" onclick="${onclick}"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13"><path d="${path}"/></svg>${txt}</div>`;
+}
+
+// ── 所有物業 ──────────────────────────────────────────────────────────────────
+function renderProperties() {
+  let f = properties;
+  if(typeF) f=f.filter(p=>p.type===typeF);
+  if(statusF) f=f.filter(p=>p.status===statusF);
+  if(groupF){const g=groups.find(x=>x.id===groupF);if(g)f=f.filter(p=>g.propertyIds.includes(p.id));}
+  if(searchF){const q=searchF.toLowerCase();f=f.filter(p=>p.name.toLowerCase().includes(q)||p.address.toLowerCase().includes(q)||(p.tenant&&p.tenant.toLowerCase().includes(q)));}
+  const banner=el('prop-group-banner');
+  if(groupF){const g=groups.find(x=>x.id===groupF);banner.innerHTML=g?`<div class="group-banner" style="background:${g.color}15;border:1px solid ${g.color}30;color:${g.color}"><span style="font-size:15px">${g.icon}</span><strong>${g.name}</strong> · ${f.length} 筆物業<span class="group-banner-clear" onclick="clearGF()">✕ 清除篩選</span></div>`:'';}
+  else banner.innerHTML='';
+  const tbody=el('props-tbody');
+  if(!f.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><p>無符合條件的物業</p></div></td></tr>';return;}
+  tbody.innerHTML=f.map(p=>{
+    const myG=groups.filter(g=>g.propertyIds.includes(p.id));
+    const chips=myG.map(g=>`<span class="group-chip" style="background:${g.color}18;color:${g.color}"><span class="group-chip-dot" style="background:${g.color}"></span>${g.name}</span>`).join('');
+    const photos=getPhotos(p.id);
+    const thumb=photos.length?`<img src="${photos[0].data}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;margin-right:10px;flex-shrink:0;border:1px solid var(--border)" alt="封面照">`:'<div style="width:40px;height:40px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-right:10px;flex-shrink:0;color:var(--text-muted);font-size:16px">🏠</div>';
+    return `<tr onclick="openDetail(${p.id})">
+      <td><div style="display:flex;align-items:center">${thumb}<div><div class="prop-name">${p.name}</div><div class="prop-addr">${p.address}</div></div></div></td>
+      <td><span class="badge badge-gray">${p.type}</span></td>
+      <td>${p.size ? p.size + ' 坪' : '—'}</td>
+      <td>${fmt(p.rent)}</td>
+      <td><div class="group-chips">${chips||'<span style="color:var(--text-muted);font-size:11px">—</span>'}</div></td>
+      <td>${sBadge(p.status)}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openDetail(${p.id})">查看</button></td>
+    </tr>`;
+  }).join('');
+}
+const filterProps=v=>{searchF=v;renderProperties();};
+const filterType=v=>{typeF=v;renderProperties();};
+const filterStatus=v=>{statusF=v;renderProperties();};
+const filterGroup=v=>{groupF=v;renderProperties();};
+const clearGF=()=>{groupF='';el('group-filter-sel').value='';renderProperties();};
+
+// ── 群組 ──────────────────────────────────────────────────────────────────────
+function renderGroups() {
+  const wrap=el('groups-grid-wrap');
+  if(!groups.length){wrap.innerHTML=`<div class="empty-state"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg><h3>尚未建立群組</h3><p>建立群組來依地區、大樓或投資人分類您的物業。</p></div>`;return;}
+  wrap.innerHTML=`<div class="groups-grid">${groups.map(g=>{
+    const props=properties.filter(p=>g.propertyIds.includes(p.id));
+    const rev=props.filter(p=>p.status==='已出租').reduce((s,p)=>s+p.rent,0);
+    const occ=props.filter(p=>p.status==='已出租').length;
+    return `<div class="group-card" onclick="openGroupDetail('${g.id}',null)">
+      <div class="group-card-header">
+        <div class="group-icon-wrap" style="background:${g.color}18">${g.icon}</div>
+        <div class="group-card-info"><div class="group-card-name">${g.name}</div><div class="group-card-meta">${g.type}</div>${g.desc?`<div class="group-card-desc">${g.desc}</div>`:''}</div>
+        <div class="group-card-actions" onclick="event.stopPropagation()">
+          <button class="group-action-btn" onclick="editGroup('${g.id}')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="group-action-btn" onclick="openAssignModal('${g.id}')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/></svg></button>
+          <button class="group-action-btn" style="color:var(--red)" onclick="deleteGroup('${g.id}')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+        </div>
+      </div>
+      <div class="group-card-stats">
+        <div class="group-stat"><div class="group-stat-val" style="color:${g.color}">${props.length}</div><div class="group-stat-label">筆物業</div></div>
+        <div class="group-stat"><div class="group-stat-val">${occ}</div><div class="group-stat-label">已出租</div></div>
+        <div class="group-stat"><div class="group-stat-val" style="font-size:13px">${fmt(rev)}</div><div class="group-stat-label">月租收入</div></div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderGroupDetail(gid) {
+  const g=groups.find(x=>x.id===gid);
+  if(!g){nav('groups',el('nav-groups-main'));return;}
+  const props=properties.filter(p=>g.propertyIds.includes(p.id));
+  const rev=props.filter(p=>p.status==='已出租').reduce((s,p)=>s+p.rent,0);
+  const occ=props.filter(p=>p.status==='已出租').length;
+  const ovd=props.filter(p=>p.payment==='逾期未繳').length;
+  el('gd-header').innerHTML=`
+    <div class="group-detail-icon" style="background:${g.color}18">${g.icon}</div>
+    <div style="flex:1"><div style="font-size:22px;font-weight:700">${g.name}</div><div style="font-size:12.5px;color:var(--text-muted);margin-top:2px">${g.type}${g.desc?' · '+g.desc:''}</div></div>
+    <div style="display:flex;gap:7px"><button class="btn btn-secondary btn-sm" onclick="editGroup('${g.id}')">編輯</button><button class="btn btn-secondary btn-sm" onclick="openAssignModal('${g.id}')">管理物業</button></div>`;
+  el('gd-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-label">物業數量</div><div class="stat-value" style="color:${g.color}">${props.length}</div><div class="stat-meta">群組內物業</div></div>
+    <div class="stat-card"><div class="stat-label">已出租</div><div class="stat-value">${occ}</div><div class="stat-meta">${props.length?Math.round(occ/props.length*100):0}% 出租率</div></div>
+    <div class="stat-card"><div class="stat-label">每月租金收入</div><div class="stat-value" style="font-size:20px">${fmt(rev)}</div><div class="stat-meta">已出租物業合計</div></div>
+    <div class="stat-card"><div class="stat-label">逾期未繳</div><div class="stat-value">${ovd}</div><div class="stat-meta"><span class="${ovd?'down':'up'}">${ovd?'需要處理':'狀況正常'}</span></div></div>`;
+  el('gd-title').textContent=`${g.name} · ${props.length} 筆物業`;
+  el('gd-tbody').innerHTML=props.length?props.map(p=>`<tr onclick="openDetail(${p.id})"><td><div class="prop-name">${p.name}</div><div class="prop-addr">${p.address}</div></td><td><span class="badge badge-gray">${p.type}</span></td><td>${p.size?p.size+' 坪':'—'}</td><td>${fmt(p.rent)}</td><td>${fmtD(p.leaseEnd)}</td><td>${sBadge(p.status)}</td></tr>`).join(''):'<tr><td colspan="6"><div class="empty-state"><p>尚未指派任何物業至此群組</p></div></td></tr>';
+}
+
+// 群組 Modal
+const GC=['#C8522A','#1E5E9A','#2A7A52','#B07020','#7A3090','#1A8080','#A03050','#505090','#7A5230','#C0302A'];
+const GI=['🏙️','🏘️','🏢','🏗️','💼','🏦','🌇','🏠','🏬','🌳','🗺️','👥','💰','🔑','🏭','🌆','🏨','🏪','🌉','🏰'];
+let selCol=GC[0],selIcon=GI[0],editGid=null;
+
+function buildGModal(){
+  el('icon-picker').innerHTML=GI.map(i=>`<div class="icon-opt${i===selIcon?' selected':''}" onclick="selIcon='${i}';document.querySelectorAll('.icon-opt').forEach(e=>e.classList.toggle('selected',e.textContent==='${i}'))">${i}</div>`).join('');
+  el('color-picker').innerHTML=GC.map(c=>`<div class="color-swatch${c===selCol?' selected':''}" style="background:${c}" onclick="pickCol('${c}')"></div>`).join('');
+}
+function pickCol(c){selCol=c;document.querySelectorAll('.color-swatch').forEach(e=>e.classList.toggle('selected',e.style.backgroundColor===c||e.getAttribute('style').includes(c)));}
+function openAddGroupModal(){editGid=null;selCol=GC[0];selIcon=GI[0];el('gm-title').textContent='新增群組';el('gm-save').textContent='建立群組';el('gm-name').value='';el('gm-desc').value='';el('gm-type').value='地區';buildGModal();openModal('add-group-modal');}
+function editGroup(gid){const g=groups.find(x=>x.id===gid);if(!g)return;editGid=gid;selCol=g.color;selIcon=g.icon;el('gm-title').textContent='編輯群組';el('gm-save').textContent='儲存變更';el('gm-name').value=g.name;el('gm-desc').value=g.desc||'';el('gm-type').value=g.type;buildGModal();openModal('add-group-modal');}
+async function saveGroup(){
+  const name=el('gm-name').value.trim();if(!name){alert('請輸入群組名稱。');return;}
+  if(editGid){Object.assign(groups.find(x=>x.id===editGid),{name,type:el('gm-type').value,desc:el('gm-desc').value.trim(),icon:selIcon,color:selCol});if(useSupabase){const g=groups.find(x=>x.id===editGid);await sbFetch(`groups?id=eq.${g.id}`,{method:'PATCH',body:JSON.stringify({name:g.name,type:g.type,description:g.desc,icon:g.icon,color:g.color})});}}
+  else{const g={id:'g'+(nextGid++),name,type:el('gm-type').value,desc:el('gm-desc').value.trim(),icon:selIcon,color:selCol,propertyIds:[]};groups.push(g);if(useSupabase)await sbFetch('groups',{method:'POST',body:JSON.stringify({id:g.id,name:g.name,type:g.type,description:g.desc,icon:g.icon,color:g.color,property_ids:[]})});}
+  closeModal('add-group-modal');refreshAll();
+}
+async function deleteGroup(gid){if(!confirm('確定要刪除此群組嗎？物業資料不會受影響。'))return;groups=groups.filter(g=>g.id!==gid);if(useSupabase)await sbFetch(`groups?id=eq.${gid}`,{method:'DELETE'});if(currentGroupId===gid)nav('groups',el('nav-groups-main'));refreshAll();}
+
+let assignGid=null;
+function openAssignModal(gid){assignGid=gid;const g=groups.find(x=>x.id===gid);if(!g)return;el('assign-title').textContent=`「${g.name}」的物業管理`;el('assign-body').innerHTML=properties.map(p=>`<label class="assign-item"><input type="checkbox" id="asgn-${p.id}" ${g.propertyIds.includes(p.id)?'checked':''}><div><div class="assign-name">${p.name}</div><div class="assign-sub">${p.address} · ${p.type}</div></div></label>`).join('');openModal('assign-modal');}
+async function saveAssignments(){const g=groups.find(x=>x.id===assignGid);if(!g)return;g.propertyIds=properties.filter(p=>el('asgn-'+p.id)?.checked).map(p=>p.id);if(useSupabase)await sbFetch(`groups?id=eq.${g.id}`,{method:'PATCH',body:JSON.stringify({property_ids:g.propertyIds})});closeModal('assign-modal');refreshAll();}
+
+// ── 租金追蹤 ──────────────────────────────────────────────────────────────────
+
+// 根據今日日期自動判斷每筆物業的租金狀態
+function autoUpdatePaymentStatus() {
+  const today = new Date();
+  const todayDay = today.getDate(); // 今天是幾號
+  properties.forEach(p => {
+    if (p.status !== '已出租' || !p.tenant) return;
+    // 若本月已手動標記「已繳清」，不覆蓋
+    if (p.payment === '已繳清') return;
+    const due = p.rentDay || 1;
+    if (todayDay > due) {
+      // 超過繳租日還沒繳 → 逾期未繳
+      p.payment = '逾期未繳';
+    } else {
+      // 尚未到或剛好是繳租日 → 待繳中
+      p.payment = '待繳中';
+    }
+  });
+}
+
+// 產生繳租截止日說明文字
+function rentDueLabel(p) {
+  const due = p.rentDay || 1;
+  const today = new Date();
+  const todayDay = today.getDate();
+  if (p.payment === '已繳清') return `每月 ${due} 日（已繳）`;
+  if (todayDay > due) return `每月 ${due} 日（已逾期 ${todayDay - due} 天）`;
+  if (todayDay === due) return `每月 ${due} 日（今天截止）`;
+  return `每月 ${due} 日（還有 ${due - todayDay} 天）`;
+}
+
+function renderRent(){
+  autoUpdatePaymentStatus();
+  const occ=properties.filter(p=>p.status==='已出租'&&p.tenant);
+  const paid=occ.filter(p=>p.payment==='已繳清'),ovd=occ.filter(p=>p.payment==='逾期未繳'),pend=occ.filter(p=>p.payment==='待繳中');
+  const totalDue=occ.reduce((s,p)=>s+p.rent,0),coll=paid.reduce((s,p)=>s+p.rent,0);
+  el('r-coll').textContent=fmt(coll);el('r-pct').textContent=totalDue?Math.round(coll/totalDue*100)+'%':'0%';
+  el('r-ovd').textContent=fmt(ovd.reduce((s,p)=>s+p.rent,0));el('r-ovd-cnt').textContent=ovd.length+' 筆物業';
+  el('r-pend').textContent=fmt(pend.reduce((s,p)=>s+p.rent,0));el('r-pend-cnt').textContent=pend.length+' 筆物業';
+
+  // 排序：逾期 > 待繳 > 已繳
+  const sorted = [...occ].sort((a,b)=>{
+    const order={'逾期未繳':0,'待繳中':1,'已繳清':2,'—':3};
+    return (order[a.payment]??3)-(order[b.payment]??3);
+  });
+
+  el('rent-tbody').innerHTML=sorted.map(p=>{
+    const today=new Date(), due=p.rentDay||1, todayDay=today.getDate();
+    const isOverdue=p.payment==='逾期未繳';
+    const isDueToday=todayDay===due&&p.payment!=='已繳清';
+    const canMark=p.payment!=='已繳清'; // 可以在任何時候標記已繳
+    return `<tr style="${isOverdue?'background:var(--red-light);':''}${isDueToday?'background:var(--amber-light);':''}">
+      <td><div class="prop-name">${p.name}</div><div class="prop-addr">${p.address}</div></td>
+      <td>${p.tenant}</td>
+      <td>
+        <div style="font-size:13px;font-weight:500">每月 ${due} 日</div>
+        <div style="font-size:11px;color:${isOverdue?'var(--red)':isDueToday?'var(--amber)':'var(--text-muted)'}">${isOverdue?`逾期 ${todayDay-due} 天`:isDueToday?'今天截止':`還有 ${due-todayDay} 天`}</div>
+      </td>
+      <td>${fmt(p.rent)}</td>
+      <td>${pBadge(p.payment)}</td>
+      <td>${canMark?`<button class="btn btn-primary btn-sm" onclick="markPaid(${p.id})">✓ 標記已繳</button>`:'<span style="color:var(--green);font-size:12px">✓ 已收款</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function markPaid(id){
+  const p=properties.find(x=>x.id===id);if(!p)return;
+  p.payment='已繳清';
+  if(useSupabase)await sbFetch(`properties?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({payment:'已繳清'})});
+  renderRent();renderDashboard();updateNotifBadge();
+}
+
+// 每月1日自動重置所有已繳清 → 待繳中（新的一個月）
+function checkMonthlyReset() {
+  const key = 'rent_reset_month';
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${now.getMonth()+1}`;
+  const lastReset = localStorage.getItem(key);
+  if (lastReset !== currentMonth) {
+    localStorage.setItem(key, currentMonth);
+    properties.forEach(p => {
+      if (p.status==='已出租' && p.tenant && p.payment==='已繳清') {
+        p.payment='待繳中';
+      }
+    });
+  }
+}
+
+// ── 合約管理 ──────────────────────────────────────────────────────────────────
+function renderContracts(){
+  const rows=properties.filter(p=>p.leaseEnd).sort((a,b)=>dfn(a.leaseEnd)-dfn(b.leaseEnd));
+  el('contracts-tbody').innerHTML=rows.length?rows.map(p=>{
+    const d=dfn(p.leaseEnd);
+    let cls='badge-green',lbl='生效中';
+    if(d<0){cls='badge-gray';lbl='已到期';}else if(d<=30){cls='badge-red';lbl='即將到期';}else if(d<=90){cls='badge-amber';lbl='三個月內到期';}
+    return `<tr>
+      <td><div class="prop-name">${p.name}</div><div class="prop-addr">${p.address}</div></td>
+      <td>${p.tenant||'—'}</td><td>${fmtD(p.leaseStart)}</td><td>${fmtD(p.leaseEnd)}</td><td>${fmt(p.rent)}</td>
+      <td><strong style="color:${d<=30?'var(--red)':d<=90?'var(--amber)':'var(--text)'}">${d>=0?d+' 天':'已到期'}</strong></td>
+      <td><span class="badge ${cls}">${lbl}</span></td>
+      <td><button class="btn btn-secondary btn-sm" onclick="openEditPropModal(${p.id})">✏️ 編輯</button></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="8"><div class="empty-state"><p>尚無合約資料</p></div></td></tr>';
+}
+
+// ── 費用支出 ──────────────────────────────────────────────────────────────────
+function renderExpenses(){
+  const totalExp=expenses.reduce((s,e)=>s+e.amt,0);
+  const totalRev=properties.filter(p=>p.status==='已出租').reduce((s,p)=>s+p.rent,0);
+  const netYield=totalRev-totalExp;
+  el('exp-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-label">總費用支出</div><div class="stat-value" style="color:var(--red);font-size:22px">${fmt(totalExp)}</div><div class="stat-meta">所有物業合計</div></div>
+    <div class="stat-card"><div class="stat-label">每月租金收入</div><div class="stat-value" style="font-size:22px">${fmt(totalRev)}</div><div class="stat-meta">已出租物業</div></div>
+    <div class="stat-card"><div class="stat-label">淨收益（估算）</div><div class="stat-value" style="color:${netYield>=0?'var(--green)':'var(--red)'};font-size:22px">${fmt(netYield)}</div><div class="stat-meta">收入扣除費用</div></div>`;
+  el('exp-tbody').innerHTML=expenses.length?expenses.map(e=>{
+    const p=properties.find(x=>x.id===e.propId);
+    return `<tr><td><div class="prop-name">${p?p.name:'未知物業'}</div><div class="prop-addr">${p?p.address:''}</div></td>
+    <td><span class="badge badge-gray">${e.cat}</span></td><td>${e.desc}</td><td>${fmtD(e.date)}</td>
+    <td><strong style="color:var(--red)">${fmt(e.amt)}</strong></td></tr>`;
+  }).join(''):'<tr><td colspan="5"><div class="empty-state"><p>尚未記錄任何費用支出</p></div></td></tr>';
+}
+function openAddExpenseModal(){refreshNavGroups();openModal('add-expense-modal');}
+async function saveExpense(){
+  const propId=parseInt(el('em-prop').value),amt=parseInt(el('em-amt').value)||0;
+  const exp={id:nextEid++,propId,cat:el('em-cat').value,desc:el('em-desc').value.trim(),amt,date:el('em-date').value};
+  expenses.push(exp);
+  if(useSupabase)await sbFetch('expenses',{method:'POST',body:JSON.stringify({property_id:propId,category:exp.cat,description:exp.desc,amount:amt,expense_date:exp.date||null})});
+  closeModal('add-expense-modal');renderExpenses();
+}
+
+// ── 維修管理 ──────────────────────────────────────────────────────────────────
+let editMid=null;
+const filterMaintStatus=v=>{maintStatusF=v;renderMaintenance();};
+const filterMaintProp=v=>{maintPropF=v;renderMaintenance();};
+
+function renderMaintenance(){
+  let m=maintenance;
+  if(maintStatusF)m=m.filter(x=>x.status===maintStatusF);
+  if(maintPropF)m=m.filter(x=>String(x.propId)===String(maintPropF));
+  const open=maintenance.filter(x=>x.status==='待處理').length;
+  const inProg=maintenance.filter(x=>x.status==='處理中').length;
+  const totalCost=maintenance.reduce((s,x)=>s+x.cost,0);
+  el('maint-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-label">待處理</div><div class="stat-value" style="color:var(--red)">${open}</div><div class="stat-meta">需要安排處理</div></div>
+    <div class="stat-card"><div class="stat-label">處理中</div><div class="stat-value" style="color:var(--amber)">${inProg}</div><div class="stat-meta">維修進行中</div></div>
+    <div class="stat-card"><div class="stat-label">維修費用合計</div><div class="stat-value" style="font-size:22px">${fmt(totalCost)}</div><div class="stat-meta">所有維修工單</div></div>`;
+  const prMap={緊急:'badge-red',高:'badge-amber',中:'badge-blue',低:'badge-gray'};
+  const stMap={待處理:'badge-red',處理中:'badge-amber',已完成:'badge-green'};
+  el('maint-tbody').innerHTML=m.length?m.map(x=>{
+    const p=properties.find(q=>q.id===x.propId);
+    return `<tr onclick="editMaintenance(${x.id})">
+      <td><div class="prop-name">${p?p.name:'未知物業'}</div><div class="prop-addr">${p?p.address:''}</div></td>
+      <td><div class="prop-name">${x.title}</div><div class="prop-addr">${x.desc?.slice(0,40)||''}</div></td>
+      <td><span class="badge ${prMap[x.priority]||'badge-gray'}">${x.priority}</span></td>
+      <td><span class="badge ${stMap[x.status]||'badge-gray'}">${x.status}</span></td>
+      <td>${fmtD(x.date)}</td>
+      <td>${x.cost?fmt(x.cost):'—'}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();editMaintenance(${x.id})">編輯</button></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="7"><div class="empty-state"><p>沒有符合條件的維修申請</p></div></td></tr>';
+}
+
+function openAddMaintModal(){editMid=null;el('maint-modal-title').textContent='新增維修申請';el('maint-save-btn').textContent='儲存申請';el('mm-title').value='';el('mm-desc').value='';el('mm-cost').value='';el('mm-priority').value='中';el('mm-status').value='待處理';el('mm-date').value=new Date().toISOString().split('T')[0];refreshNavGroups();openModal('add-maint-modal');}
+function editMaintenance(mid){const m=maintenance.find(x=>x.id===mid);if(!m)return;editMid=mid;el('maint-modal-title').textContent='編輯維修申請';el('maint-save-btn').textContent='儲存變更';el('mm-prop').value=m.propId;el('mm-title').value=m.title;el('mm-desc').value=m.desc||'';el('mm-cost').value=m.cost||'';el('mm-priority').value=m.priority;el('mm-status').value=m.status;el('mm-date').value=m.date||'';refreshNavGroups();openModal('add-maint-modal');}
+
+async function saveMaintenance(){
+  const propId=parseInt(el('mm-prop').value),title=el('mm-title').value.trim();
+  if(!title){alert('請輸入問題標題。');return;}
+  const data={propId,title,desc:el('mm-desc').value.trim(),priority:el('mm-priority').value,status:el('mm-status').value,cost:parseInt(el('mm-cost').value)||0,date:el('mm-date').value};
+  if(editMid){Object.assign(maintenance.find(x=>x.id===editMid),data);if(useSupabase)await sbFetch(`maintenance?id=eq.${editMid}`,{method:'PATCH',body:JSON.stringify({property_id:propId,title,description:data.desc,priority:data.priority,status:data.status,cost:data.cost,reported_date:data.date||null})});}
+  else{maintenance.push({id:nextMid++,...data});if(useSupabase)await sbFetch('maintenance',{method:'POST',body:JSON.stringify({property_id:propId,title,description:data.desc,priority:data.priority,status:data.status,cost:data.cost,reported_date:data.date||null})});}
+  closeModal('add-maint-modal');renderMaintenance();updateNotifBadge();
+}
+
+// ── 聯絡人 ────────────────────────────────────────────────────────────────────
+const filterContacts=v=>{contactSearchF=v;renderContacts();};
+const filterContactRole=v=>{contactRoleF=v;renderContacts();};
+
+function renderContacts(){
+  let c=contacts;
+  if(contactRoleF)c=c.filter(x=>x.role===contactRoleF);
+  if(contactSearchF){const q=contactSearchF.toLowerCase();c=c.filter(x=>x.name.toLowerCase().includes(q)||(x.email&&x.email.toLowerCase().includes(q))||(x.company&&x.company.toLowerCase().includes(q)));}
+  const roleColors={租客:'#1E5E9A',承包商:'#7A5230',緊急聯絡:'#C0302A',投資人:'#C8522A',其他:'#7A746C'};
+  el('contacts-list').innerHTML=c.length?c.map(x=>{
+    const p=properties.find(q=>q.id===x.propId);
+    const initials=x.name.slice(0,2);
+    const col=roleColors[x.role]||'#7A746C';
+    return `<div class="contact-card">
+      <div class="contact-avatar" style="background:${col}">${initials}</div>
+      <div class="contact-info">
+        <div class="contact-name">${x.name} <span class="badge badge-gray" style="font-size:10px;margin-left:4px">${x.role}</span></div>
+        ${x.company?`<div class="contact-role">${x.company}</div>`:''}
+        <div class="contact-role">${x.email||''}${x.email&&x.phone?' · ':''}${x.phone||''}${p?' · '+p.name:''}</div>
+        ${x.notes?`<div class="contact-role" style="margin-top:2px;font-style:italic">${x.notes}</div>`:''}
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty-state"><p>沒有符合條件的聯絡人</p></div>';
+}
+function openAddContactModal(){refreshNavGroups();openModal('add-contact-modal');}
+async function saveContact(){
+  const name=el('cm-name').value.trim();if(!name){alert('請輸入姓名。');return;}
+  const propId=el('cm-prop').value?parseInt(el('cm-prop').value):null;
+  const c={id:nextCid++,name,role:el('cm-role').value,email:el('cm-email').value.trim(),phone:el('cm-phone').value.trim(),company:el('cm-company').value.trim(),propId,notes:el('cm-notes').value.trim()};
+  contacts.push(c);
+  if(useSupabase)await sbFetch('contacts',{method:'POST',body:JSON.stringify({name:c.name,role:c.role,email:c.email,phone:c.phone,company:c.company,property_id:propId,notes:c.notes})});
+  closeModal('add-contact-modal');renderContacts();
+}
+
+// ── 數據分析 ──────────────────────────────────────────────────────────────────
+function renderAnalytics(){
+  const occ=properties.filter(p=>p.status==='已出租'&&p.size>0);
+  const avg=occ.length?(occ.reduce((s,p)=>s+p.rent/p.size,0)/occ.length):0;
+  const vac=properties.filter(p=>p.status==='空置').length;
+  const e60=properties.filter(p=>p.leaseEnd&&dfn(p.leaseEnd)>=0&&dfn(p.leaseEnd)<=60).length;
+  el('an-sqft').textContent='NT$'+avg.toFixed(0);
+  el('an-vac').textContent=Math.round(vac/properties.length*100)+'%';
+  el('an-vac-cnt').textContent=vac+' 筆空置';
+  el('an-exp').textContent=e60;
+  const types=['住宅','商業','工業','綜合用途'];
+  const tc={住宅:'#C8522A',商業:'#1E5E9A',工業:'#2A7A52',綜合用途:'#B07020'};
+  const tr={};types.forEach(t=>tr[t]=properties.filter(p=>p.type===t&&p.status==='已出租').reduce((s,p)=>s+p.rent,0));
+  const maxR=Math.max(...Object.values(tr),1);
+  el('an-bars').innerHTML=types.map(t=>`<div class="bar-row"><div class="bar-label">${t}</div><div class="bar-track"><div class="bar-fill" style="width:${tr[t]/maxR*100}%;background:${tc[t]}"></div></div><div class="bar-val">${fmt(tr[t])}</div></div>`).join('');
+  const o=properties.filter(p=>p.status==='已出租');
+  const pC=o.filter(p=>p.payment==='已繳清').length,oC=o.filter(p=>p.payment==='逾期未繳').length,peC=o.filter(p=>p.payment==='待繳中').length;
+  const tot=o.length||1,circ=289,pL=pC/tot*circ,oL=oC/tot*circ,peL=peC/tot*circ;
+  el('an-d-paid').setAttribute('stroke-dasharray',pL+' '+(circ-pL));el('an-d-paid').setAttribute('stroke-dashoffset',0);
+  el('an-d-ovd').setAttribute('stroke-dasharray',oL+' '+(circ-oL));el('an-d-ovd').setAttribute('stroke-dashoffset',-pL);
+  el('an-d-pend').setAttribute('stroke-dasharray',peL+' '+(circ-peL));el('an-d-pend').setAttribute('stroke-dashoffset',-(pL+oL));
+  el('an-rate').textContent=Math.round(pC/tot*100)+'%';
+  el('an-legend').innerHTML=[['已繳清','#2A7A52',pC],['逾期未繳','#C0302A',oC],['待繳中','#B07020',peC]].map(([l,c,v])=>`<div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:${c}"></div>${l}</div><div class="legend-val">${v}</div></div>`).join('');
+}
+
+// ── 照片管理 ──────────────────────────────────────────────────────────────────
+// 照片以 base64 儲存在 localStorage，key 為 `photos_<propId>`
+// 每筆物業最多 20 張，每張壓縮至 800px 寬
+
+function getPhotos(propId) {
+  try { return JSON.parse(localStorage.getItem('photos_' + propId) || '[]'); }
+  catch { return []; }
+}
+function savePhotos(propId, photos) {
+  localStorage.setItem('photos_' + propId, JSON.stringify(photos));
+}
+
+function compressImage(file, maxW=800) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ratio = Math.min(1, maxW / img.width);
+        canvas.width = Math.round(img.width * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handlePhotoUpload(propId, input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const photos = getPhotos(propId);
+  if (photos.length + files.length > 20) {
+    alert(`每筆物業最多上傳 20 張照片。目前已有 ${photos.length} 張，最多還能上傳 ${20 - photos.length} 張。`);
+    return;
+  }
+  // Show loading state
+  el('photo-upload-label-' + propId).textContent = `上傳中... (0/${files.length})`;
+  for (let i = 0; i < files.length; i++) {
+    const b64 = await compressImage(files[i]);
+    photos.push({ data: b64, name: files[i].name, added: new Date().toISOString() });
+    const lbl = el('photo-upload-label-' + propId);
+    if (lbl) lbl.textContent = `上傳中... (${i+1}/${files.length})`;
+  }
+  savePhotos(propId, photos);
+  renderDetailTab(currentDetailTab); // re-render photo tab
+}
+
+function deletePhoto(propId, idx) {
+  if (!confirm('確定要刪除這張照片嗎？')) return;
+  const photos = getPhotos(propId);
+  photos.splice(idx, 1);
+  savePhotos(propId, photos);
+  renderDetailTab(currentDetailTab);
+}
+
+// Lightbox
+let lbPhotos = [], lbIdx = 0;
+function openLightbox(photos, idx) {
+  lbPhotos = photos; lbIdx = idx;
+  el('lightbox-img').src = photos[idx].data;
+  el('lightbox-counter').textContent = `${idx+1} / ${photos.length}`;
+  el('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  el('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function lightboxNav(dir) {
+  lbIdx = (lbIdx + dir + lbPhotos.length) % lbPhotos.length;
+  el('lightbox-img').src = lbPhotos[lbIdx].data;
+  el('lightbox-counter').textContent = `${lbIdx+1} / ${lbPhotos.length}`;
+}
+document.addEventListener('keydown', e => {
+  if (!el('lightbox').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft') lightboxNav(-1);
+  if (e.key === 'ArrowRight') lightboxNav(1);
+  if (e.key === 'Escape') closeLightbox();
+});
+
+function renderPhotoTab(propId) {
+  const photos = getPhotos(propId);
+  const grid = photos.length ? `
+    <div class="photo-grid">
+      ${photos.map((ph, i) => `
+        <div class="photo-thumb" onclick="openLightbox(getPhotos(${propId}),${i})">
+          <img src="${ph.data}" alt="物業照片 ${i+1}">
+          <button class="photo-thumb-del" onclick="event.stopPropagation();deletePhoto(${propId},${i})" title="刪除">✕</button>
+        </div>`).join('')}
+    </div>` : '';
+
+  const canUpload = photos.length < 20;
+  return `
+    <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--text-muted)">${photos.length} 張照片${photos.length>0?'（點擊放大）':''}</span>
+      <span style="font-size:11px;color:var(--text-muted)">上限 20 張</span>
+    </div>
+    ${grid}
+    ${canUpload ? `
+    <label class="photo-upload-zone" for="photo-input-${propId}">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <p id="photo-upload-label-${propId}">點擊或拖曳上傳照片</p>
+      <small>支援 JPG、PNG、WEBP，每次可多選，自動壓縮</small>
+      <input type="file" id="photo-input-${propId}" accept="image/*" multiple style="display:none"
+        onchange="handlePhotoUpload(${propId},this)">
+    </label>` : `<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:13px">已達 20 張上限</div>`}
+    <div style="margin-top:14px;padding:10px 12px;background:var(--blue-light);border-radius:8px;font-size:12px;color:var(--blue)">
+      💡 照片目前儲存在您的瀏覽器本機。連接 Supabase Storage 後可儲存至雲端讓團隊共享。
+    </div>`;
+}
+
+// ── 物業詳情側欄 ──────────────────────────────────────────────────────────────
+let currentDetailId=null,currentDetailTab=0;
+function openDetail(id){
+  currentDetailId=id;currentDetailTab=0;
+  const p=properties.find(x=>x.id===id);if(!p)return;
+  el('dp-name').textContent=p.name;el('dp-addr').textContent=p.address;
+  el('dp-tabs').querySelectorAll('.detail-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  renderDetailTab(0);
+  const dp=el('detail-panel');dp.style.right='0';dp.style.display='flex';
+  const db=el('detail-backdrop');db.style.display='block';
+}
+function closeDetail(){
+  const dp=el('detail-panel');dp.style.right='-480px';
+  const db=el('detail-backdrop');db.style.display='none';
+}
+function switchTab(i){currentDetailTab=i;el('dp-tabs').querySelectorAll('.detail-tab').forEach((t,j)=>t.classList.toggle('active',j===i));renderDetailTab(i);}
+function renderDetailTab(i){
+  const p=properties.find(x=>x.id===currentDetailId);if(!p)return;
+  const myG=groups.filter(g=>g.propertyIds.includes(p.id));
+  const d=p.leaseEnd?dfn(p.leaseEnd):null;
+  const tabs=[
+    // 0: 基本資料
+    `<div class="detail-section">
+      <div class="detail-section-title">物業資料</div>
+      <div class="detail-row"><span class="detail-label">類型</span><span>${p.type}</span></div>
+      <div class="detail-row"><span class="detail-label">坪數</span><span>${p.size?p.size+' 坪':'—'}</span></div>
+      <div class="detail-row"><span class="detail-label">月租金</span><span><strong>${fmt(p.rent)}</strong></span></div>
+      <div class="detail-row"><span class="detail-label">狀態</span><span>${sBadge(p.status)}</span></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">租客與合約</div>
+      <div class="detail-row"><span class="detail-label">租客</span><span>${p.tenant||'—'}</span></div>
+      <div class="detail-row"><span class="detail-label">起租日</span><span>${fmtD(p.leaseStart)}</span></div>
+      <div class="detail-row"><span class="detail-label">到期日</span><span>${fmtD(p.leaseEnd)}</span></div>
+      <div class="detail-row"><span class="detail-label">剩餘天數</span><span style="color:${d!==null&&d<=30?'var(--red)':d!==null&&d<=90?'var(--amber)':'var(--text)'};font-weight:600">${d!==null?(d>=0?d+' 天':'已到期'):'—'}</span></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">財務狀況</div>
+      <div class="detail-row"><span class="detail-label">每月繳租日</span><span>每月 <strong>${p.rentDay||1}</strong> 日</span></div>
+      <div class="detail-row"><span class="detail-label">繳租狀態</span><span>${pBadge(p.payment)}</span></div>
+      <div class="detail-row"><span class="detail-label">年租金</span><span>${fmt(p.rent*12)}</span></div>
+      <div class="detail-row"><span class="detail-label">每坪租金</span><span>${p.size?'NT$'+(p.rent/p.size).toFixed(0)+' /坪':'—'}</span></div>
+    </div>
+    ${myG.length?`<div class="detail-section"><div class="detail-section-title">所屬群組</div>${myG.map(g=>`<div class="detail-row"><span class="detail-label"><span style="font-size:13px;margin-right:4px">${g.icon}</span>${g.name}</span><span class="badge" style="background:${g.color}18;color:${g.color}">${g.type}</span></div>`).join('')}</div>`:''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+      <button class="btn btn-primary btn-sm" onclick="closeDetail();openEditPropModal(${p.id})">✏️ 編輯物業</button>
+      ${p.payment!=='已繳清'&&p.status==='已出租'?`<button class="btn btn-secondary btn-sm" onclick="markPaid(${p.id})">✓ 標記租金已繳</button>`:''}
+      <button class="btn btn-secondary btn-sm" style="color:var(--red)" onclick="deleteProp(${p.id})">刪除</button>
+    </div>`,
+    // 1: 照片
+    renderPhotoTab(p.id),
+    // 2: 維修記錄
+    (()=>{
+      const ms=maintenance.filter(m=>m.propId===p.id);
+      const prMap={緊急:'badge-red',高:'badge-amber',中:'badge-blue',低:'badge-gray'};
+      const stMap={待處理:'badge-red',處理中:'badge-amber',已完成:'badge-green'};
+      return `<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="openAddMaintModal();setTimeout(()=>el('mm-prop').value=${p.id},100)">+ 新增申請</button></div>`+
+        (ms.length?ms.map(m=>`<div style="padding:12px;border:1px solid var(--border);border-radius:9px;margin-bottom:9px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap"><strong style="font-size:13px">${m.title}</strong><span class="badge ${prMap[m.priority]||'badge-gray'}">${m.priority}</span><span class="badge ${stMap[m.status]||'badge-gray'}">${m.status}</span></div>
+          ${m.desc?`<div style="font-size:12.5px;color:var(--text-muted);margin-bottom:4px">${m.desc}</div>`:''}
+          <div style="font-size:11.5px;color:var(--text-muted)">${fmtD(m.date)}${m.cost?' · '+fmt(m.cost):''}</div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="editMaintenance(${m.id})">編輯</button>
+        </div>`).join(''):'<div class="empty-state"><p>此物業尚無維修記錄</p></div>');
+    })(),
+    // 3: 費用記錄
+    (()=>{
+      const es=expenses.filter(e=>e.propId===p.id);
+      const total=es.reduce((s,e)=>s+e.amt,0);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:12px;color:var(--text-muted)">費用合計：<strong style="color:var(--red)">${fmt(total)}</strong></span><button class="btn btn-primary btn-sm" onclick="openAddExpenseModal();setTimeout(()=>el('em-prop').value=${p.id},100)">+ 新增費用</button></div>`+
+        (es.length?es.map(e=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">${e.desc}</div><div style="font-size:11.5px;color:var(--text-muted)">${e.cat} · ${fmtD(e.date)}</div></div>
+          <strong style="color:var(--red)">${fmt(e.amt)}</strong>
+        </div>`).join(''):'<div class="empty-state"><p>此物業尚無費用記錄</p></div>');
+    })(),
+    // 4: 備註
+    `<div class="detail-section-title">物業備註</div>
+    <textarea class="note-area" id="note-area-${p.id}" placeholder="在此記錄物業相關備註，例如租賃歷史、特殊狀況、管理注意事項...">${p.notes||''}</textarea>
+    <div style="margin-top:10px;display:flex;justify-content:flex-end">
+      <button class="btn btn-primary btn-sm" onclick="saveNote(${p.id})">儲存備註</button>
+    </div>`
+  ];
+  el('dp-body').innerHTML=tabs[i]||tabs[0];
+}
+async function saveNote(id){const p=properties.find(x=>x.id===id);if(!p)return;p.notes=el('note-area-'+id)?.value||'';if(useSupabase)await sbFetch(`properties?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({notes:p.notes})});alert('備註已儲存！');}
+
+// ── 新增 / 編輯物業 ───────────────────────────────────────────────────────────
+let editPropId = null;
+
+function openAddPropModal(){
+  editPropId = null;
+  el('prop-modal-title').textContent = '新增物業';
+  el('prop-modal-save').textContent = '新增物業';
+  // 清空欄位
+  ['fp-name','fp-addr','fp-size','fp-rent','fp-tenant','fp-start','fp-end'].forEach(i=>{const e=el(i);if(e)e.value='';});
+  el('fp-type').value='住宅';
+  el('fp-status').value='已出租';
+  el('fp-pay').value='待繳中';
+  el('fp-rentday').value='1';
+  el('fp-groups').innerHTML=groups.length?groups.map(g=>`<label class="assign-item"><input type="checkbox" id="fpg-${g.id}"><div><div class="assign-name">${g.icon} ${g.name}</div><div class="assign-sub">${g.type}</div></div></label>`).join(''):'<div style="padding:10px;color:var(--text-muted);font-size:13px">尚未建立群組。</div>';
+  openModal('add-prop-modal');
+}
+
+function openEditPropModal(id){
+  const p=properties.find(x=>x.id===id); if(!p) return;
+  editPropId=id;
+  el('prop-modal-title').textContent='編輯物業資料';
+  el('prop-modal-save').textContent='儲存變更';
+  el('fp-name').value=p.name||'';
+  el('fp-addr').value=p.address||'';
+  el('fp-type').value=p.type||'住宅';
+  el('fp-size').value=p.size||'';
+  el('fp-rent').value=p.rent||'';
+  el('fp-tenant').value=p.tenant||'';
+  el('fp-status').value=p.status||'已出租';
+  el('fp-start').value=p.leaseStart||'';
+  el('fp-end').value=p.leaseEnd||'';
+  el('fp-pay').value=p.payment||'待繳中';
+  el('fp-rentday').value=p.rentDay||1;
+  el('fp-groups').innerHTML=groups.length?groups.map(g=>`<label class="assign-item"><input type="checkbox" id="fpg-${g.id}" ${g.propertyIds.includes(p.id)?'checked':''}><div><div class="assign-name">${g.icon} ${g.name}</div><div class="assign-sub">${g.type}</div></div></label>`).join(''):'<div style="padding:10px;color:var(--text-muted);font-size:13px">尚未建立群組。</div>';
+  openModal('add-prop-modal');
+}
+
+async function addProperty(){
+  const name=el('fp-name').value.trim();if(!name){alert('請輸入物業名稱。');return;}
+  const data={
+    name, address:el('fp-addr').value.trim()||'—',
+    type:el('fp-type').value, size:parseFloat(el('fp-size').value)||0,
+    rent:parseInt(el('fp-rent').value)||0, tenant:el('fp-tenant').value.trim(),
+    status:el('fp-status').value, leaseStart:el('fp-start').value,
+    leaseEnd:el('fp-end').value, payment:el('fp-pay').value,
+    rentDay:parseInt(el('fp-rentday').value)||1
+  };
+
+  if(editPropId){
+    // 編輯現有物業
+    const p=properties.find(x=>x.id===editPropId);
+    Object.assign(p, data);
+    if(useSupabase){
+      try {
+        await sbFetch(`properties?id=eq.${editPropId}`,{method:'PATCH',body:JSON.stringify({
+          name:data.name,address:data.address,type:data.type,size:data.size,rent:data.rent,
+          tenant:data.tenant,status:data.status,lease_start:data.leaseStart||null,
+          lease_end:data.leaseEnd||null,payment:data.payment,rent_day:data.rentDay
+        })});
+      } catch(e) {
+        // 若 rent_day 欄位不存在，改用不含 rent_day 的版本
+        try {
+          await sbFetch(`properties?id=eq.${editPropId}`,{method:'PATCH',body:JSON.stringify({
+            name:data.name,address:data.address,type:data.type,size:data.size,rent:data.rent,
+            tenant:data.tenant,status:data.status,lease_start:data.leaseStart||null,
+            lease_end:data.leaseEnd||null,payment:data.payment
+          })});
+        } catch(e2){ console.error('編輯物業失敗：',e2); }
+      }
+    }
+    // 更新群組
+    groups.forEach(g=>{
+      const checked=!!el('fpg-'+g.id)?.checked;
+      const inGroup=g.propertyIds.includes(editPropId);
+      if(checked&&!inGroup){g.propertyIds.push(editPropId);}
+      else if(!checked&&inGroup){g.propertyIds=g.propertyIds.filter(pid=>pid!==editPropId);}
+      if(useSupabase&&checked!==inGroup) sbFetch(`groups?id=eq.${g.id}`,{method:'PATCH',body:JSON.stringify({property_ids:g.propertyIds})});
+    });
+  } else {
+    // 新增物業
+    const np={id:nextId++,...data,notes:''};
+    if(useSupabase){
+      try {
+        const res=await sbFetch('properties',{method:'POST',body:JSON.stringify({
+          name:np.name,address:np.address,type:np.type,size:np.size,rent:np.rent,
+          tenant:np.tenant,status:np.status,lease_start:np.leaseStart||null,
+          lease_end:np.leaseEnd||null,payment:np.payment,rent_day:np.rentDay,notes:''
+        })});
+        if(res[0])np.id=res[0].id;
+      } catch(e) {
+        // 若 rent_day 欄位不存在，改用不含 rent_day 的版本
+        try {
+          const res=await sbFetch('properties',{method:'POST',body:JSON.stringify({
+            name:np.name,address:np.address,type:np.type,size:np.size,rent:np.rent,
+            tenant:np.tenant,status:np.status,lease_start:np.leaseStart||null,
+            lease_end:np.leaseEnd||null,payment:np.payment,notes:''
+          })});
+          if(res[0])np.id=res[0].id;
+        } catch(e2){ console.error('新增物業失敗：',e2); }
+      }
+    }
+    properties.push(np);
+    groups.forEach(g=>{if(el('fpg-'+g.id)?.checked){g.propertyIds.push(np.id);if(useSupabase)sbFetch(`groups?id=eq.${g.id}`,{method:'PATCH',body:JSON.stringify({property_ids:g.propertyIds})});}});
+  }
+
+  closeModal('add-prop-modal');
+  editPropId=null;
+  refreshAll();
+}
+
+async function deleteProp(id){if(!confirm('確定要刪除此物業嗎？'))return;properties=properties.filter(p=>p.id!==id);groups.forEach(g=>{g.propertyIds=g.propertyIds.filter(pid=>pid!==id);});if(useSupabase){await sbFetch(`properties?id=eq.${id}`,{method:'DELETE'});groups.forEach(async g=>await sbFetch(`groups?id=eq.${g.id}`,{method:'PATCH',body:JSON.stringify({property_ids:g.propertyIds})}));}closeDetail();refreshAll();}
+
+// ── 匯出 CSV ──────────────────────────────────────────────────────────────────
+function exportCSV(){
+  const rows=[['物業名稱','地址','類型','坪數','月租金','租客','狀態','起租日','到期日','繳租狀態'],...properties.map(p=>[p.name,p.address,p.type,p.size,p.rent,p.tenant,p.status,p.leaseStart,p.leaseEnd,p.payment])];
+  const csv=rows.map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='Approperty-物業資料.csv';a.click();
+}
+
+// ── 狀態標籤 ──────────────────────────────────────────────────────────────────
+const sBadge=s=>({已出租:'<span class="badge badge-green">已出租</span>',空置:'<span class="badge badge-blue">空置</span>',維修中:'<span class="badge badge-amber">維修中</span>'}[s]||`<span class="badge badge-gray">${s}</span>`);
+const pBadge=s=>({已繳清:'<span class="badge badge-green">已繳清</span>',逾期未繳:'<span class="badge badge-red">逾期未繳</span>',待繳中:'<span class="badge badge-amber">待繳中</span>','—':'<span class="badge badge-gray">—</span>'}[s]||`<span class="badge badge-gray">${s}</span>`);
+
+// ── Supabase 設定精靈 ─────────────────────────────────────────────────────────
+let setupCurrentStep=1;
+function openSetup(){
+  setupCurrentStep=1;
+  updateSetupUI();
+  const overlay=el('setup-overlay');
+  overlay.style.cssText='display:flex!important;position:fixed!important;inset:0!important;background:rgba(26,23,20,0.6)!important;z-index:9999!important;align-items:center!important;justify-content:center!important;padding:20px!important';
+}
+function closeSetup(){
+  const overlay=el('setup-overlay');
+  overlay.style.cssText='display:none!important';
+}
+function setupStep(n){setupCurrentStep=n;updateSetupUI();}
+function updateSetupUI(){
+  document.querySelectorAll('.setup-step').forEach((s,i)=>s.classList.toggle('active',i+1===setupCurrentStep));
+  const dots=el('setup-dots');dots.innerHTML='';for(let i=1;i<=5;i++){const d=document.createElement('div');d.className='setup-step-dot'+(i<=setupCurrentStep?' done':'');dots.appendChild(d);}
+}
+function copySQL(){const txt=el('sql-block').textContent;navigator.clipboard?.writeText(txt).then(()=>alert('SQL 已複製到剪貼簿！'));}
+async function testSupabase(){
+  const url=el('sb-url').value.trim(),key=el('sb-key').value.trim();
+  const s=el('test-status');s.style.display='none';
+  try{const r=await fetch(url+'/rest/v1/properties?limit=1',{headers:{'apikey':key,'Authorization':'Bearer '+key}});if(r.ok||r.status===200||r.status===406){s.textContent='✓ 連線成功！';s.className='test-status ok';}else{throw new Error('HTTP '+r.status);}}
+  catch(e){s.textContent='✗ 連線失敗，請確認網址與金鑰';s.className='test-status fail';}
+}
+async function connectSupabase(){
+  const url=el('sb-url').value.trim(),key=el('sb-key').value.trim();
+  if(!url||!key){alert('請輸入專案網址與公開金鑰。');return;}
+  sbUrl=url;sbKey=key;localStorage.setItem('sb_url',url);localStorage.setItem('sb_key',key);
+  setupStep(5);await loadFromSupabase();
+}
+
+// ── 初始化 ────────────────────────────────────────────────────────────────────
+checkMonthlyReset();       // 每月1日自動重置租金狀態
+autoUpdatePaymentStatus(); // 根據今日日期自動判斷逾期
+refreshNavGroups();
+renderDashboard();
+updateNotifBadge();
+if(sbUrl && sbKey){ loadFromSupabase(); }
+</script>
+</body>
+</html>
